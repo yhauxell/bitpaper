@@ -1,0 +1,20 @@
+{
+  "id": "ethereum",
+  "name": "Ethereum",
+  "symbol": "ETH",
+  "icon": "♦",
+  "version": "1.0.0",
+  "description": "Ethereum wallet generation plugin with ERC-20 token support",
+  "author": "BitPaper Team",
+  "dependencies": {
+    "ethers": "^6.9.0"
+  },
+  "features": {
+    "erc20Support": true,
+    "testnet": false
+  },
+  "derivationPath": "m/44'/60'/0'/0/0",
+  "explorerUrls": {
+    "mainnet": "https://etherscan.io/address/{address}"
+  }
+}

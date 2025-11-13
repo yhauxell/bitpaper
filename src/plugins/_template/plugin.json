@@ -1,0 +1,25 @@
+{
+  "id": "[blockchain-id]",
+  "name": "[Blockchain Name]",
+  "symbol": "[SYMBOL]",
+  "icon": "[ICON]",
+  "version": "1.0.0",
+  "description": "[Brief description of what this plugin does]",
+  "author": "Your Name <your.email@example.com>",
+  "dependencies": {
+    "example-blockchain-sdk": "^1.0.0"
+  },
+  "features": {
+    "testnet": false,
+    "multipleFormats": false,
+    "customFeature": false
+  },
+  "derivationPath": "m/44'/[COIN_TYPE]'/0'/0/0",
+  "explorerUrls": {
+    "mainnet": "https://[blockchain-explorer].com/address/{address}",
+    "testnet": "https://testnet.[blockchain-explorer].com/address/{address}"
+  },
+  "config": {
+    "customSetting": "value"
+  }
+}

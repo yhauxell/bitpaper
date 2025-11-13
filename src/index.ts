@@ -23,12 +23,20 @@ import * as crypto from "crypto";
 import * as fs from "fs";
 import inquirer from "inquirer";
 import ora from "ora";
+import { getRegistry } from "./core/PluginRegistry";
+import { WalletFactory } from "./core/WalletFactory";
+import { registerBuiltInPlugins } from "./plugins";
 import { printSecurityWarnings, printUsageInstructions } from "./ui";
 import {
   formatWalletSet,
   generateDummyWalletSet,
   generateWalletSet,
 } from "./wallet-generator";
+
+// Initialize plugin system
+registerBuiltInPlugins();
+const registry = getRegistry();
+const walletFactory = new WalletFactory();
 
 const program = new Command();
 
@@ -62,50 +70,37 @@ program
 
     if (options.currencies) {
       // Parse comma-separated list from command line
+      const availableIds = registry.getIds();
       selectedCurrencies = options.currencies
         .split(",")
         .map((c: string) => c.trim().toLowerCase())
-        .filter((c: string) =>
-          ["bitcoin", "ethereum", "solana", "chainlink"].includes(c)
-        );
+        .filter((c: string) => availableIds.includes(c));
 
       if (selectedCurrencies.length === 0) {
         console.error(
           chalk.red(
-            "❌ Error: No valid currencies specified. Use: bitcoin, ethereum, solana, chainlink"
+            `❌ Error: No valid currencies specified. Available: ${availableIds.join(
+              ", "
+            )}`
           )
         );
         process.exit(1);
       }
     } else {
-      // Interactive selection using inquirer
+      // Interactive selection using inquirer - dynamically from registry
+      const providers = registry.list();
+      const choices = providers.map((provider) => ({
+        name: `${provider.metadata.icon}  ${provider.metadata.name} (${provider.metadata.symbol})`,
+        value: provider.metadata.id,
+        checked: true,
+      }));
+
       const answers = await inquirer.prompt([
         {
           type: "checkbox",
           name: "currencies",
           message: "Select cryptocurrencies to generate:",
-          choices: [
-            {
-              name: "₿  Bitcoin (BTC)",
-              value: "bitcoin",
-              checked: true,
-            },
-            {
-              name: "♦  Ethereum (ETH)",
-              value: "ethereum",
-              checked: true,
-            },
-            {
-              name: "◎  Solana (SOL)",
-              value: "solana",
-              checked: true,
-            },
-            {
-              name: "🔗 Chainlink (LINK)",
-              value: "chainlink",
-              checked: true,
-            },
-          ],
+          choices,
           validate: (answer: string[]) => {
             if (answer.length < 1) {
               return "You must choose at least one cryptocurrency.";
@@ -265,35 +260,31 @@ program
   .command("info")
   .description("Show information about supported cryptocurrencies")
   .action(() => {
+    const providers = registry.list();
+
     console.log("");
     console.log(chalk.bold.cyan("📋 Supported Cryptocurrencies"));
     console.log(chalk.gray("=".repeat(80)));
     console.log("");
 
-    console.log(chalk.bold("₿  Bitcoin (BTC)"));
-    console.log("   Network: Mainnet");
-    console.log("   Address Type: Native SegWit (P2WPKH)");
-    console.log("   Derivation Path: m/44'/0'/0'/0/0");
-    console.log("");
-
-    console.log(chalk.bold("♦  Ethereum (ETH)"));
-    console.log("   Network: Mainnet");
-    console.log("   Compatible with: All ERC-20 tokens");
-    console.log("   Derivation Path: m/44'/60'/0'/0/0");
-    console.log("");
-
-    console.log(chalk.bold("🔗 Chainlink (LINK)"));
-    console.log("   Network: Ethereum (ERC-20 token)");
-    console.log("   Uses Ethereum addresses");
-    console.log("   Derivation Path: m/44'/60'/0'/0/0");
-    console.log("");
-
-    console.log(chalk.bold("◎  Solana (SOL)"));
-    console.log("   Network: Mainnet-beta");
-    console.log("   Key Generation: From first 32 bytes of seed");
-    console.log("");
+    providers.forEach((provider) => {
+      console.log(
+        chalk.bold(
+          `${provider.metadata.icon}  ${provider.metadata.name} (${provider.metadata.symbol})`
+        )
+      );
+      if (provider.metadata.description) {
+        console.log(`   ${provider.metadata.description}`);
+      }
+      if (provider.metadata.derivationPath) {
+        console.log(`   Derivation Path: ${provider.metadata.derivationPath}`);
+      }
+      console.log(`   Plugin Version: ${provider.metadata.version}`);
+      console.log("");
+    });
 
     console.log(chalk.gray("=".repeat(80)));
+    console.log(chalk.cyan(`Total Plugins Loaded: ${providers.length}`));
     console.log("");
     console.log(chalk.yellow("⚠️  Security Notice:"));
     console.log(

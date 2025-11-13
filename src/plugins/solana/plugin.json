@@ -1,0 +1,18 @@
+{
+  "id": "solana",
+  "name": "Solana",
+  "symbol": "SOL",
+  "icon": "◎",
+  "version": "1.0.0",
+  "description": "Solana wallet generation plugin",
+  "author": "BitPaper Team",
+  "dependencies": {
+    "@solana/web3.js": "^1.95.0"
+  },
+  "features": {
+    "testnet": false
+  },
+  "explorerUrls": {
+    "mainnet": "https://solscan.io/account/{address}"
+  }
+}

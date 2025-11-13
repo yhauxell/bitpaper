@@ -1,35 +1,19 @@
 /**
  * Wallet Generation Module
  *
- * Core functionality for generating cryptocurrency wallets
+ * Compatibility layer that uses the plugin system
  */
 
-import { Keypair } from "@solana/web3.js";
-import { BIP32Factory } from "bip32";
 import * as bip39 from "bip39";
-import * as bitcoin from "bitcoinjs-lib";
-import { ethers } from "ethers";
-import * as qrcode from "qrcode-terminal";
-import * as ecc from "tiny-secp256k1";
+import chalk from "chalk";
+import { getRegistry } from "./core/PluginRegistry";
+import { WalletFactory } from "./core/WalletFactory";
 
-// Initialize BIP32 with tiny-secp256k1
-const bip32 = BIP32Factory(ecc);
-
-/**
- * Generate QR code as string
- */
-function generateQRCode(data: string): Promise<string> {
-  return new Promise((resolve) => {
-    let qrString = "";
-    qrcode.generate(data, { small: true }, (qr) => {
-      qrString = qr;
-      resolve(qrString);
-    });
-  });
-}
+const walletFactory = new WalletFactory();
+const registry = getRegistry();
 
 // ============================================================================
-// Types
+// Legacy Types (for backward compatibility)
 // ============================================================================
 
 export interface BitcoinWallet {
@@ -37,7 +21,7 @@ export interface BitcoinWallet {
   address: string;
   privateKey: string;
   publicKey: string;
-  wif: string; // Wallet Import Format
+  wif: string;
 }
 
 export interface EthereumWallet {
@@ -65,293 +49,216 @@ export interface WalletSet {
 }
 
 // ============================================================================
-// Configuration
-// ============================================================================
-
-const BITCOIN_NETWORK = bitcoin.networks.bitcoin; // Use bitcoin.networks.testnet for testnet
-
-// ============================================================================
-// Wallet Generation Functions
+// Wallet Generation Functions (using plugin system)
 // ============================================================================
 
 /**
- * Generate a Bitcoin wallet from seed
+ * Generate a complete set of wallets for selected cryptocurrencies
  */
-export function generateBitcoinWallet(seed: Buffer): BitcoinWallet {
-  // Derive Bitcoin key from seed
-  const root = bip32.fromSeed(seed, BITCOIN_NETWORK);
-
-  // Use BIP44 path for Bitcoin: m/44'/0'/0'/0/0
-  const path = "m/44'/0'/0'/0/0";
-  const child = root.derivePath(path);
-
-  if (!child.privateKey) {
-    throw new Error("Failed to derive Bitcoin private key");
-  }
-
-  // Generate P2WPKH (native segwit) address
-  const { address } = bitcoin.payments.p2wpkh({
-    pubkey: child.publicKey,
-    network: BITCOIN_NETWORK,
-  });
-
-  if (!address) {
-    throw new Error("Failed to generate Bitcoin address");
-  }
-
-  return {
-    type: "Bitcoin",
-    address,
-    privateKey: child.privateKey.toString("hex"),
-    publicKey: child.publicKey.toString("hex"),
-    wif: child.toWIF(),
-  };
-}
-
-/**
- * Generate an Ethereum wallet from seed
- */
-export function generateEthereumWallet(
-  seed: Buffer,
-  type: "Ethereum" | "Chainlink" = "Ethereum"
-): EthereumWallet {
-  // Derive Ethereum key from seed using BIP44 path: m/44'/60'/0'/0/0
-  const hdNode = ethers.HDNodeWallet.fromSeed(seed);
-  const path = "m/44'/60'/0'/0/0";
-  const wallet = hdNode.derivePath(path);
-
-  return {
-    type,
-    address: wallet.address,
-    privateKey: wallet.privateKey,
-    publicKey: wallet.publicKey,
-  };
-}
-
-/**
- * Generate a Solana wallet from seed
- */
-export function generateSolanaWallet(seed: Buffer): SolanaWallet {
-  // Use first 32 bytes of seed for Solana keypair
-  const keypair = Keypair.fromSeed(seed.slice(0, 32));
-
-  return {
-    type: "Solana",
-    address: keypair.publicKey.toBase58(),
-    privateKey: Buffer.from(keypair.secretKey).toString("hex"),
-    publicKey: keypair.publicKey.toBase58(),
-  };
-}
-
-/**
- * Generate a complete wallet set with mnemonic
- */
-export function generateWalletSet(currencies?: string[]): WalletSet {
-  // Default to all currencies if none specified
-  const selected = currencies || ["bitcoin", "ethereum", "solana", "chainlink"];
-
-  // Generate a strong mnemonic (24 words for maximum security)
+export function generateWalletSet(
+  selectedCurrencies: string[] = []
+): WalletSet {
+  // Generate BIP39 mnemonic (24 words for maximum security)
   const mnemonic = bip39.generateMnemonic(256);
-
-  // Convert mnemonic to seed
   const seed = bip39.mnemonicToSeedSync(mnemonic);
 
-  // Generate wallets for selected blockchains
+  return generateWalletSetFromSeed(seed, mnemonic, selectedCurrencies);
+}
+
+/**
+ * Generate wallet set from existing seed
+ */
+function generateWalletSetFromSeed(
+  seed: Buffer,
+  mnemonic: string,
+  selectedCurrencies: string[]
+): WalletSet {
+  const timestamp = new Date().toISOString();
   const walletSet: WalletSet = {
     mnemonic,
-    timestamp: new Date().toISOString(),
-    selectedCurrencies: selected,
+    timestamp,
+    selectedCurrencies:
+      selectedCurrencies.length > 0 ? selectedCurrencies : registry.getIds(),
   };
 
-  if (selected.includes("bitcoin")) {
-    walletSet.bitcoin = generateBitcoinWallet(seed);
-  }
+  // Generate wallets for selected currencies using plugins
+  const currencies = walletSet.selectedCurrencies;
 
-  if (selected.includes("ethereum")) {
-    walletSet.ethereum = generateEthereumWallet(seed, "Ethereum");
-  }
+  for (const currency of currencies) {
+    const provider = registry.get(currency);
+    if (!provider) {
+      console.warn(`Provider "${currency}" not found. Skipping.`);
+      continue;
+    }
 
-  if (selected.includes("solana")) {
-    walletSet.solana = generateSolanaWallet(seed);
-  }
+    try {
+      // Call generateWallet (it returns WalletInfo, not Promise for our current plugins)
+      const walletResult = provider.generateWallet(seed);
+      // Handle both sync and async providers
+      const wallet = walletResult instanceof Promise ? undefined : walletResult;
 
-  if (selected.includes("chainlink")) {
-    walletSet.chainlink = generateEthereumWallet(seed, "Chainlink");
+      if (!wallet) {
+        // If it was async, we can't handle it in sync function
+        console.warn(
+          `Async wallet generation not supported in legacy API for "${currency}"`
+        );
+        continue;
+      }
+
+      // Map to legacy format
+      switch (currency) {
+        case "bitcoin":
+          walletSet.bitcoin = {
+            type: "Bitcoin",
+            address: wallet.address,
+            privateKey: wallet.privateKey,
+            publicKey: wallet.publicKey,
+            wif: wallet.additionalData?.wif || "",
+          };
+          break;
+        case "ethereum":
+          walletSet.ethereum = {
+            type: "Ethereum",
+            address: wallet.address,
+            privateKey: wallet.privateKey,
+            publicKey: wallet.publicKey,
+          };
+          break;
+        case "solana":
+          walletSet.solana = {
+            type: "Solana",
+            address: wallet.address,
+            privateKey: wallet.privateKey,
+            publicKey: wallet.publicKey,
+          };
+          break;
+        case "chainlink":
+          walletSet.chainlink = {
+            type: "Chainlink",
+            address: wallet.address,
+            privateKey: wallet.privateKey,
+            publicKey: wallet.publicKey,
+          };
+          break;
+      }
+    } catch (error) {
+      console.error(`Error generating wallet for "${currency}":`, error);
+    }
   }
 
   return walletSet;
 }
 
 /**
- * Generate a dummy wallet set for dry-run mode (no real keys generated)
+ * Generate dummy wallet set for testing/demo purposes
  */
-export function generateDummyWalletSet(currencies?: string[]): WalletSet {
-  // Default to all currencies if none specified
-  const selected = currencies || ["bitcoin", "ethereum", "solana", "chainlink"];
+export function generateDummyWalletSet(
+  selectedCurrencies: string[] = []
+): WalletSet {
+  const dummyMnemonic =
+    "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art";
+  const seed = bip39.mnemonicToSeedSync(dummyMnemonic);
 
-  const walletSet: WalletSet = {
-    mnemonic:
-      "example word word word word word word word word word word word word word word word word word word word word word word word word",
-    timestamp: new Date().toISOString(),
-    selectedCurrencies: selected,
-  };
-
-  if (selected.includes("bitcoin")) {
-    walletSet.bitcoin = {
-      type: "Bitcoin",
-      address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-      privateKey:
-        "0000000000000000000000000000000000000000000000000000000000000000",
-      publicKey:
-        "000000000000000000000000000000000000000000000000000000000000000000",
-      wif: "KwDiBf89QgGbjEhKnhXJuH7LrciVrZi3qYjgd9M7rFU73sVHnoWn",
-    };
-  }
-
-  if (selected.includes("ethereum")) {
-    walletSet.ethereum = {
-      type: "Ethereum",
-      address: "0x0000000000000000000000000000000000000000",
-      privateKey:
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      publicKey:
-        "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-    };
-  }
-
-  if (selected.includes("solana")) {
-    walletSet.solana = {
-      type: "Solana",
-      address: "11111111111111111111111111111111",
-      privateKey:
-        "0000000000000000000000000000000000000000000000000000000000000000",
-      publicKey: "11111111111111111111111111111111",
-    };
-  }
-
-  if (selected.includes("chainlink")) {
-    walletSet.chainlink = {
-      type: "Chainlink",
-      address: "0x0000000000000000000000000000000000000000",
-      privateKey:
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      publicKey:
-        "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-    };
-  }
-
-  return walletSet;
+  return generateWalletSetFromSeed(seed, dummyMnemonic, selectedCurrencies);
 }
 
 /**
- * Verify a mnemonic phrase is valid
+ * Format a wallet set for display/output
+ */
+export async function formatWalletSet(
+  walletSet: WalletSet,
+  setNumber: number = 1
+): Promise<string> {
+  const lines: string[] = [];
+
+  // Header
+  lines.push("");
+  lines.push(chalk.bold.cyan("═".repeat(80)));
+  lines.push(chalk.bold.cyan(`  PAPER WALLET SET #${setNumber}`));
+  lines.push(chalk.bold.cyan("═".repeat(80)));
+  lines.push("");
+
+  // Timestamp
+  lines.push(
+    chalk.gray(`Generated: ${new Date(walletSet.timestamp).toLocaleString()}`)
+  );
+  lines.push("");
+
+  // Mnemonic
+  lines.push(chalk.bold.yellow("🔐 MASTER SEED PHRASE (BIP39 Mnemonic)"));
+  lines.push(chalk.yellow("-".repeat(80)));
+  lines.push(chalk.bold(walletSet.mnemonic));
+  lines.push("");
+  lines.push(
+    chalk.red(
+      "⚠️  CRITICAL: Write this down and store it securely! This can recover ALL wallets below."
+    )
+  );
+  lines.push("");
+  lines.push(chalk.gray("─".repeat(80)));
+  lines.push("");
+
+  // Individual wallets - use plugin system for formatting
+  for (const currency of walletSet.selectedCurrencies) {
+    const provider = registry.get(currency);
+    if (!provider) continue;
+
+    let wallet;
+    switch (currency) {
+      case "bitcoin":
+        wallet = walletSet.bitcoin;
+        break;
+      case "ethereum":
+        wallet = walletSet.ethereum;
+        break;
+      case "solana":
+        wallet = walletSet.solana;
+        break;
+      case "chainlink":
+        wallet = walletSet.chainlink;
+        break;
+    }
+
+    if (wallet) {
+      // Convert legacy wallet to plugin WalletInfo format
+      const walletInfo = {
+        address: wallet.address,
+        privateKey: wallet.privateKey,
+        publicKey: wallet.publicKey,
+        additionalData: (wallet as any).wif
+          ? { wif: (wallet as any).wif }
+          : undefined,
+      };
+
+      const formattedLines = await provider.formatWalletInfo(walletInfo);
+      lines.push(...formattedLines);
+    }
+  }
+
+  lines.push(chalk.bold.cyan("═".repeat(80)));
+  lines.push("");
+
+  return lines.join("\n");
+}
+
+/**
+ * Verify a BIP39 mnemonic is valid
  */
 export function verifyMnemonic(mnemonic: string): boolean {
   return bip39.validateMnemonic(mnemonic);
 }
 
 /**
- * Format wallet information for display
+ * Restore wallets from a mnemonic phrase
  */
-export async function formatWalletSet(
-  walletSet: WalletSet,
-  index: number
-): Promise<string> {
-  const separator = "=".repeat(80);
-  const lines: string[] = [];
-
-  lines.push("");
-  lines.push(separator);
-  lines.push(`  PAPER WALLET SET #${index}`);
-  lines.push(`  Generated: ${walletSet.timestamp}`);
-  lines.push(separator);
-  lines.push("");
-
-  // Mnemonic
-  lines.push("🔑 SEED PHRASE (BIP39 Mnemonic - 24 words)");
-  lines.push("-".repeat(80));
-  lines.push(walletSet.mnemonic);
-  lines.push("");
-  lines.push(
-    "⚠️  CRITICAL: Store this phrase securely. It can recover ALL wallets below."
-  );
-  lines.push("");
-
-  // Bitcoin
-  if (walletSet.bitcoin) {
-    lines.push("₿  BITCOIN (BTC)");
-    lines.push("-".repeat(80));
-    lines.push(`Address:     ${walletSet.bitcoin.address}`);
-    lines.push(
-      `Explorer:    https://blockchair.com/bitcoin/address/${walletSet.bitcoin.address}`
-    );
-    lines.push("");
-    lines.push("QR Code:");
-    const btcQR = await generateQRCode(walletSet.bitcoin.address);
-    lines.push(btcQR);
-    lines.push("");
-    lines.push(`Private Key: ${walletSet.bitcoin.privateKey}`);
-    lines.push(`WIF:         ${walletSet.bitcoin.wif}`);
-    lines.push(`Public Key:  ${walletSet.bitcoin.publicKey}`);
-    lines.push("");
+export function restoreFromMnemonic(
+  mnemonic: string,
+  selectedCurrencies: string[] = []
+): WalletSet | null {
+  if (!verifyMnemonic(mnemonic)) {
+    return null;
   }
 
-  // Ethereum
-  if (walletSet.ethereum) {
-    lines.push("♦  ETHEREUM (ETH)");
-    lines.push("-".repeat(80));
-    lines.push(`Address:     ${walletSet.ethereum.address}`);
-    lines.push(
-      `Explorer:    https://etherscan.io/address/${walletSet.ethereum.address}`
-    );
-    lines.push("");
-    lines.push("QR Code:");
-    const ethQR = await generateQRCode(walletSet.ethereum.address);
-    lines.push(ethQR);
-    lines.push("");
-    lines.push(`Private Key: ${walletSet.ethereum.privateKey}`);
-    lines.push(`Public Key:  ${walletSet.ethereum.publicKey}`);
-    lines.push("");
-  }
-
-  // Chainlink
-  if (walletSet.chainlink) {
-    lines.push("🔗 CHAINLINK (LINK)");
-    lines.push("-".repeat(80));
-    lines.push(`Address:     ${walletSet.chainlink.address}`);
-    lines.push(
-      `Explorer:    https://etherscan.io/address/${walletSet.chainlink.address}`
-    );
-    lines.push("");
-    lines.push("QR Code:");
-    const linkQR = await generateQRCode(walletSet.chainlink.address);
-    lines.push(linkQR);
-    lines.push("");
-    lines.push(`Private Key: ${walletSet.chainlink.privateKey}`);
-    lines.push("Note: Chainlink uses Ethereum addresses (ERC-20 token)");
-    lines.push("");
-  }
-
-  // Solana
-  if (walletSet.solana) {
-    lines.push("◎  SOLANA (SOL)");
-    lines.push("-".repeat(80));
-    lines.push(`Address:     ${walletSet.solana.address}`);
-    lines.push(
-      `Explorer:    https://solscan.io/account/${walletSet.solana.address}`
-    );
-    lines.push("");
-    lines.push("QR Code:");
-    const solQR = await generateQRCode(walletSet.solana.address);
-    lines.push(solQR);
-    lines.push("");
-    lines.push(`Private Key: ${walletSet.solana.privateKey}`);
-    lines.push(`Public Key:  ${walletSet.solana.publicKey}`);
-    lines.push("");
-  }
-
-  lines.push(separator);
-  lines.push("");
-
-  return lines.join("\n");
+  const seed = bip39.mnemonicToSeedSync(mnemonic);
+  return generateWalletSetFromSeed(seed, mnemonic, selectedCurrencies);
 }

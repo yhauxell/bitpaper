@@ -1,0 +1,23 @@
+{
+  "id": "bitcoin",
+  "name": "Bitcoin",
+  "symbol": "BTC",
+  "icon": "₿",
+  "version": "1.0.0",
+  "description": "Bitcoin wallet generation plugin with Native SegWit (P2WPKH) support",
+  "author": "BitPaper Team",
+  "dependencies": {
+    "bitcoinjs-lib": "^6.1.5",
+    "bip32": "^4.0.0",
+    "tiny-secp256k1": "^2.2.3"
+  },
+  "features": {
+    "nativeSegwit": true,
+    "multipleFormats": true,
+    "testnet": false
+  },
+  "derivationPath": "m/44'/0'/0'/0/0",
+  "explorerUrls": {
+    "mainnet": "https://blockchair.com/bitcoin/address/{address}"
+  }
+}

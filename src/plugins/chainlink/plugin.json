@@ -1,0 +1,20 @@
+{
+  "id": "chainlink",
+  "name": "Chainlink",
+  "symbol": "LINK",
+  "icon": "🔗",
+  "version": "1.0.0",
+  "description": "Chainlink (LINK) wallet generation - ERC-20 token on Ethereum",
+  "author": "BitPaper Team",
+  "dependencies": {
+    "ethers": "^6.9.0"
+  },
+  "features": {
+    "erc20Token": true,
+    "testnet": false
+  },
+  "derivationPath": "m/44'/60'/0'/0/0",
+  "explorerUrls": {
+    "mainnet": "https://etherscan.io/address/{address}"
+  }
+}

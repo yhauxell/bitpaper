@@ -676,12 +676,92 @@ When you make changes:
   npm deprecate bitpaper@1.0.0 "Please upgrade to 1.0.1"
   ```
 
+## 🔌 Extending BitPaper with New Blockchains
+
+BitPaper uses a **plugin-based architecture** that makes it easy to add support for new blockchains without modifying core files.
+
+### Plugin Architecture Features
+
+- ✅ **Self-contained**: Each blockchain in its own plugin directory
+- ✅ **Type-safe**: Full TypeScript support with strict interfaces
+- ✅ **Auto-discovered**: Plugins are automatically registered
+- ✅ **Extensible**: Support for lifecycle hooks and custom features
+- ✅ **No core changes**: Add blockchains without touching existing code
+
+### Adding a New Blockchain
+
+**Using the Plugin Generator (Recommended):**
+
+```bash
+yarn generate:plugin
+```
+
+This interactive command will:
+
+- ✅ Prompt for blockchain details (name, symbol, icon, explorer URL, etc.)
+- ✅ Generate all necessary files with your configuration
+- ✅ Auto-register the plugin in `src/plugins/index.ts`
+- ✅ Provide implementation guidance and next steps
+
+**Manual Setup:**
+
+1. Copy the plugin template:
+
+   ```bash
+   cp -r src/plugins/_template src/plugins/cardano
+   ```
+
+2. Implement the `BlockchainProvider` interface:
+
+   - `generateWallet(seed)` - Create wallet from BIP39 seed
+   - `getExplorerUrl(address)` - Return block explorer URL
+   - `formatWalletInfo(wallet)` - Format wallet display
+   - `validateAddress(address)` - Validate address format
+
+3. Register your plugin in `src/plugins/index.ts`
+
+4. Build and test:
+   ```bash
+   yarn build
+   bitpaper generate --currencies cardano
+   ```
+
+### 📖 Full Plugin Development Guide
+
+See [PLUGIN_DEVELOPMENT.md](./PLUGIN_DEVELOPMENT.md) for:
+
+- Complete API documentation
+- Step-by-step tutorial
+- Best practices and security guidelines
+- Example implementations
+- Testing strategies
+
+### Current Built-in Plugins
+
+- **Bitcoin** (`src/plugins/bitcoin/`) - Native SegWit support
+- **Ethereum** (`src/plugins/ethereum/`) - ERC-20 compatible
+- **Solana** (`src/plugins/solana/`) - Ed25519 keypairs
+- **Chainlink** (`src/plugins/chainlink/`) - ERC-20 token
+
+### Contributing a Plugin
+
+We welcome blockchain integrations! Please ensure:
+
+- ✅ Follows plugin template structure
+- ✅ Includes proper error handling
+- ✅ Uses well-maintained dependencies
+- ✅ Tested thoroughly with dry-run and real generation
+- ✅ Documentation for unique features
+
+Submit a PR to add your blockchain to BitPaper! 🚀
+
 ## 📚 Additional Resources
 
 - [BIP39 Specification](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki)
 - [Bitcoin Paper Wallets](https://en.bitcoin.it/wiki/Paper_wallet)
 - [Ethereum Private Keys](https://ethereum.org/en/developers/docs/accounts/#account-creation)
 - [Solana Key Pairs](https://docs.solana.com/wallet-guide/cli#keypair-generation)
+- [Plugin Development Guide](./PLUGIN_DEVELOPMENT.md) - Add new blockchains
 
 ## 🆘 Support & Issues
 

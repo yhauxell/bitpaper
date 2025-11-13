@@ -1,0 +1,28 @@
+#
+{{pascalCase name}}
+Plugin This plugin adds
+{{pascalCase name}}
+({{upperCase symbol}}) support to BitPaper. ## Status ⚠️ **Work in Progress** -
+This plugin is not yet fully implemented. ## TODO - [ ] Install required
+dependencies - [ ] Implement `generateWallet()` method - [ ] Implement
+`validateAddress()` method - [ ] Test wallet generation in dry-run mode - [ ]
+Test with real key generation (offline!) - [ ] Update this README with
+implementation details ## Dependencies Add the required blockchain SDK to
+`package.json`: ```bash yarn add
+{{#if dependencies}}{{dependencies}}{{else}}your-blockchain-sdk{{/if}}
+``` ## Implementation Guide 1. **Generate Wallet** (`generateWallet()`) - Derive
+keys from the BIP39 seed - Generate the blockchain address - Return WalletInfo
+with address, privateKey, publicKey 2. **Validate Address**
+(`validateAddress()`) - Implement address format validation - Check address
+checksum if applicable - Return boolean 3. **Test** ```bash yarn build bitpaper
+generate --dry-run --currencies
+{{kebabCase name}}
+``` ## Resources -
+{{pascalCase name}}
+Documentation: [Add link] - Block Explorer:
+{{explorerUrl}}
+- SDK Documentation: [Add link] ## Author
+
+{{author}}
+
+## Notes [Add any blockchain-specific notes or considerations here]

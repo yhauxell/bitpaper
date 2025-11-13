@@ -1,0 +1,14 @@
+{ "id": "{{kebabCase name}}", "name": "{{pascalCase name}}", "symbol": "{{upperCase
+  symbol
+}}", "icon": "{{icon}}", "version": "1.0.0", "description": "{{description}}",
+"author": "{{author}}", "dependencies": {
+{{#if dependencies}}
+  "{{dependencies}}": "^1.0.0"
+{{else}}
+  "example-package": "^1.0.0"
+{{/if}}
+}, "features": {},
+{{#if derivationPath}}
+  "derivationPath": "{{{derivationPath}}}",
+{{/if}}
+"explorerUrls": { "mainnet": "{{explorerUrl}}/{address}" } }

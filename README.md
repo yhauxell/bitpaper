@@ -1,5 +1,9 @@
 # BitPaper 🔐
 
+[![CI](https://github.com/yhauxell/bitpaper/actions/workflows/ci.yml/badge.svg)](https://github.com/yhauxell/bitpaper/actions/workflows/ci.yml)
+[![npm version](https://badge.fury.io/js/bitpaper.svg)](https://www.npmjs.com/package/bitpaper)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A secure CLI tool to generate paper wallets for multiple cryptocurrencies: **Bitcoin**, **Ethereum**, **Solana**, and **Chainlink**.
 
 Built with [Commander.js](https://github.com/tj/commander.js/) - the most popular Node.js CLI framework.
@@ -309,7 +313,33 @@ bitpaper/
 
 ## 📦 Publishing to npm
 
-### Prerequisites
+### 🤖 Automated Publishing (GitHub Actions)
+
+This project uses GitHub Actions to automatically publish to npm when code is merged to main!
+
+**Setup (One-time):**
+
+1. Create npm token at [npmjs.com](https://www.npmjs.com/settings/tokens)
+2. Add token as `NPM_TOKEN` secret in GitHub repository settings
+3. See [GITHUB_SETUP.md](./GITHUB_SETUP.md) for detailed instructions
+
+**To Publish a New Version:**
+
+```bash
+# Bump version
+yarn version --patch  # or --minor, --major
+
+# Push to GitHub
+git push --follow-tags
+
+# GitHub Actions will automatically publish to npm! 🚀
+```
+
+### 📝 Manual Publishing
+
+If you prefer to publish manually:
+
+**Prerequisites:**
 
 1. **Create an npm account**: [https://www.npmjs.com/signup](https://www.npmjs.com/signup)
 2. **Login to npm**:

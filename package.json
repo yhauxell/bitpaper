@@ -1,6 +1,6 @@
 {
   "name": "bitpaper",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "A secure CLI tool to generate paper wallets for multiple cryptocurrencies (Bitcoin, Ethereum, Solana, Chainlink)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

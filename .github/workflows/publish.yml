@@ -1,0 +1,66 @@
+name: Publish to npm
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "package.json"
+      - "src/**"
+      - "bin/**"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Check if version changed
+        id: version-check
+        run: |
+          if git diff HEAD^ HEAD -- package.json | grep '"version"'; then
+            echo "Version changed, will publish"
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version unchanged, skipping publish"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install dependencies
+        if: steps.version-check.outputs.changed == 'true'
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        if: steps.version-check.outputs.changed == 'true'
+        run: yarn build
+
+      - name: Publish to npm
+        if: steps.version-check.outputs.changed == 'true'
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Get package version
+        if: steps.version-check.outputs.changed == 'true'
+        id: package-version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Create Git tag
+        if: steps.version-check.outputs.changed == 'true'
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag -a "v${{ steps.package-version.outputs.version }}" -m "Release v${{ steps.package-version.outputs.version }}"
+          git push origin "v${{ steps.package-version.outputs.version }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

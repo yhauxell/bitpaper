@@ -9,10 +9,24 @@ import { BIP32Factory } from "bip32";
 import * as bip39 from "bip39";
 import * as bitcoin from "bitcoinjs-lib";
 import { ethers } from "ethers";
+import * as qrcode from "qrcode-terminal";
 import * as ecc from "tiny-secp256k1";
 
 // Initialize BIP32 with tiny-secp256k1
 const bip32 = BIP32Factory(ecc);
+
+/**
+ * Generate QR code as string
+ */
+function generateQRCode(data: string): Promise<string> {
+  return new Promise((resolve) => {
+    let qrString = "";
+    qrcode.generate(data, { small: true }, (qr) => {
+      qrString = qr;
+      resolve(qrString);
+    });
+  });
+}
 
 // ============================================================================
 // Types
@@ -239,7 +253,10 @@ export function verifyMnemonic(mnemonic: string): boolean {
 /**
  * Format wallet information for display
  */
-export function formatWalletSet(walletSet: WalletSet, index: number): string {
+export async function formatWalletSet(
+  walletSet: WalletSet,
+  index: number
+): Promise<string> {
   const separator = "=".repeat(80);
   const lines: string[] = [];
 
@@ -268,6 +285,11 @@ export function formatWalletSet(walletSet: WalletSet, index: number): string {
     lines.push(
       `Explorer:    https://blockchair.com/bitcoin/address/${walletSet.bitcoin.address}`
     );
+    lines.push("");
+    lines.push("QR Code:");
+    const btcQR = await generateQRCode(walletSet.bitcoin.address);
+    lines.push(btcQR);
+    lines.push("");
     lines.push(`Private Key: ${walletSet.bitcoin.privateKey}`);
     lines.push(`WIF:         ${walletSet.bitcoin.wif}`);
     lines.push(`Public Key:  ${walletSet.bitcoin.publicKey}`);
@@ -282,6 +304,11 @@ export function formatWalletSet(walletSet: WalletSet, index: number): string {
     lines.push(
       `Explorer:    https://etherscan.io/address/${walletSet.ethereum.address}`
     );
+    lines.push("");
+    lines.push("QR Code:");
+    const ethQR = await generateQRCode(walletSet.ethereum.address);
+    lines.push(ethQR);
+    lines.push("");
     lines.push(`Private Key: ${walletSet.ethereum.privateKey}`);
     lines.push(`Public Key:  ${walletSet.ethereum.publicKey}`);
     lines.push("");
@@ -295,6 +322,11 @@ export function formatWalletSet(walletSet: WalletSet, index: number): string {
     lines.push(
       `Explorer:    https://etherscan.io/address/${walletSet.chainlink.address}`
     );
+    lines.push("");
+    lines.push("QR Code:");
+    const linkQR = await generateQRCode(walletSet.chainlink.address);
+    lines.push(linkQR);
+    lines.push("");
     lines.push(`Private Key: ${walletSet.chainlink.privateKey}`);
     lines.push("Note: Chainlink uses Ethereum addresses (ERC-20 token)");
     lines.push("");
@@ -308,6 +340,11 @@ export function formatWalletSet(walletSet: WalletSet, index: number): string {
     lines.push(
       `Explorer:    https://solscan.io/account/${walletSet.solana.address}`
     );
+    lines.push("");
+    lines.push("QR Code:");
+    const solQR = await generateQRCode(walletSet.solana.address);
+    lines.push(solQR);
+    lines.push("");
     lines.push(`Private Key: ${walletSet.solana.privateKey}`);
     lines.push(`Public Key:  ${walletSet.solana.publicKey}`);
     lines.push("");

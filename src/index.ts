@@ -182,7 +182,7 @@ program
         const walletSet = options.dryRun
           ? generateDummyWalletSet(selectedCurrencies)
           : generateWalletSet(selectedCurrencies);
-        const formatted = formatWalletSet(walletSet, i);
+        const formatted = await formatWalletSet(walletSet, i);
         outputs.push(formatted);
       }
 

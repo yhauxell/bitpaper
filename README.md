@@ -321,6 +321,7 @@ Each wallet set includes:
 
 - **Address**: For receiving Bitcoin
 - **Explorer Link**: Direct link to Blockchair (check balance/transactions)
+- **QR Code**: Scannable QR code for easy address sharing
 - **Private Key**: For sending Bitcoin or importing to wallets
 - **WIF** (Wallet Import Format): Alternative private key format
 - **Public Key**: For verification
@@ -331,6 +332,7 @@ Each wallet set includes:
 
 - **Address**: For receiving Ethereum
 - **Explorer Link**: Direct link to Etherscan (check balance/transactions)
+- **QR Code**: Scannable QR code for easy address sharing
 - **Private Key**: For sending ETH or importing to MetaMask
 - **Public Key**: For verification
 - Works with all ERC-20 tokens
@@ -340,6 +342,7 @@ Each wallet set includes:
 
 - **Address**: For receiving LINK tokens
 - **Explorer Link**: Direct link to Etherscan (check balance/transactions)
+- **QR Code**: Scannable QR code for easy address sharing
 - **Private Key**: For sending LINK or importing to wallets
 - **Note**: Uses Ethereum addresses (LINK is an ERC-20 token)
 - **Derivation Path**: `m/44'/60'/0'/0/0`
@@ -348,6 +351,7 @@ Each wallet set includes:
 
 - **Address**: For receiving Solana
 - **Explorer Link**: Direct link to Solscan (check balance/transactions)
+- **QR Code**: Scannable QR code for easy address sharing
 - **Private Key**: For sending SOL or importing to Phantom/Solflare
 - **Public Key**: For verification
 
@@ -356,8 +360,34 @@ Each wallet set includes:
 ### Receiving Funds
 
 1. Use the **Address** to receive funds
-2. Share the address publicly - it's safe
-3. Test with a small amount first
+2. **Share using QR Code** - Scan with wallet apps instead of typing manually
+3. Share the address publicly - it's safe
+4. Test with a small amount first
+
+### Using QR Codes
+
+Each address includes a **scannable QR code** that makes receiving funds easier:
+
+**Benefits:**
+
+- ✅ No typing errors
+- ✅ Fast and convenient
+- ✅ Works with all major wallet apps
+- ✅ Can be scanned from printed paper wallets
+
+**How to use:**
+
+1. Open your wallet app (MetaMask, Phantom, etc.)
+2. Select "Send" or "Transfer"
+3. Click "Scan QR Code"
+4. Point your camera at the QR code on your paper wallet
+5. Confirm the transaction
+
+**For printing:**
+
+- QR codes print clearly on paper
+- Use high-quality printer for best results
+- Test scanning before storing away
 
 ### Sending Funds
 

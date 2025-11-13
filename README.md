@@ -8,6 +8,41 @@ A secure CLI tool to generate paper wallets for multiple cryptocurrencies: **Bit
 
 Built with [Commander.js](https://github.com/tj/commander.js/) - the most popular Node.js CLI framework.
 
+### ✨ Key Features
+
+- 🔐 **100% Offline** - Generate wallets without internet connection
+- 🎯 **Multi-Currency** - Bitcoin, Ethereum, Solana, Chainlink support
+- 🔌 **Plugin Architecture** - Easy to add new blockchains
+- ⚡ **Plugin Generator** - Scaffold new plugins in 2 minutes with `yarn generate:plugin`
+- 📱 **QR Codes** - Scannable QR codes for each address
+- 🔗 **Explorer Links** - Direct links to blockchain explorers
+- 🧪 **Dry-Run Mode** - Test without generating real keys
+- 📝 **BIP39/BIP44** - Industry-standard HD wallet generation
+- 🎨 **Interactive CLI** - Beautiful, user-friendly interface
+- 🔒 **Type-Safe** - Full TypeScript support
+
+## 📚 Quick Links
+
+**For Users:**
+
+- 📦 [Installation](#-installation) - Get started in 30 seconds
+- 🚀 [Usage Guide](#-usage) - Generate your first wallet
+- ⚠️ [Security Guide](#️-critical-security-warnings) - Essential safety practices
+- 📋 [What Gets Generated](#-what-gets-generated) - Understand the output
+
+**For Developers:**
+
+- 🔌 [Plugin Generator](#-for-developers--contributors) - Add new blockchains (2 min setup!)
+- 📖 [Plugin Development Guide](./PLUGIN_DEVELOPMENT.md) - Complete API documentation
+- 🏗️ [Plugin Architecture](./PLUGIN_ARCHITECTURE.md) - Technical design patterns
+- 🤝 [Contributing Guide](./CONTRIBUTING.md) - How to contribute
+
+**Additional:**
+
+- 🔧 [Development Setup](#-development) - Local development
+- 📦 [Publishing Guide](./PUBLISHING.md) - npm publishing workflow
+- 📚 [Additional Resources](#-additional-resources) - Standards & documentation
+
 ## 📖 What is a Paper Wallet?
 
 A **paper wallet** is a physical document containing your cryptocurrency addresses and private keys, stored completely offline. Think of it as printing out your bank account information, but with cryptographic keys instead.
@@ -306,6 +341,49 @@ bitpaper generate --currencies bitcoin --no-warnings --no-instructions
 bitpaper --help
 bitpaper generate --help
 ```
+
+## 👩‍💻 For Developers & Contributors
+
+Want to add support for a new blockchain? BitPaper makes it easy!
+
+### Quick Start: Generate a Plugin
+
+```bash
+# Clone the repo
+git clone https://github.com/yhauxell/bitpaper.git
+cd bitpaper
+yarn install
+
+# Generate a new blockchain plugin
+yarn generate:plugin
+```
+
+The interactive generator will create all necessary files and register your plugin automatically!
+
+### Available Commands
+
+```bash
+yarn generate:plugin  # Generate new blockchain plugin
+yarn build           # Build the project
+yarn dev             # Run in development mode
+```
+
+### Documentation for Contributors
+
+- **[Plugin Generator Guide](./PLUGIN_GENERATOR.md)** - Step-by-step scaffolding guide
+- **[Plugin Development Guide](./PLUGIN_DEVELOPMENT.md)** - Complete API documentation
+- **[Contributing Guide](./CONTRIBUTING.md)** - Contribution workflow
+- **[Plugin Architecture](./PLUGIN_ARCHITECTURE.md)** - Technical design
+
+### Why Contribute?
+
+- ✅ **Easy**: Plugin generator handles all boilerplate
+- ✅ **Fast**: Create plugin scaffold in under 2 minutes
+- ✅ **Type-safe**: Full TypeScript support with interfaces
+- ✅ **Documented**: Comprehensive guides and examples
+- ✅ **Impactful**: Help users secure their crypto assets
+
+**See something missing? [Open an issue](https://github.com/yhauxell/bitpaper/issues) or submit a PR!**
 
 ## 📋 What Gets Generated
 
@@ -726,15 +804,40 @@ This interactive command will:
    bitpaper generate --currencies cardano
    ```
 
-### 📖 Full Plugin Development Guide
+### 📖 Comprehensive Plugin Documentation
 
-See [PLUGIN_DEVELOPMENT.md](./PLUGIN_DEVELOPMENT.md) for:
+**Quick Start:**
 
-- Complete API documentation
-- Step-by-step tutorial
-- Best practices and security guidelines
-- Example implementations
-- Testing strategies
+- **[Plugin Generator Guide](./PLUGIN_GENERATOR.md)** - Interactive plugin scaffolding tool
+  - Command reference and usage
+  - Prompt explanations
+  - Troubleshooting tips
+  - Template customization
+
+**Complete Development Guide:**
+
+- **[Plugin Development Guide](./PLUGIN_DEVELOPMENT.md)** - Full implementation guide
+  - Complete API documentation
+  - Step-by-step tutorial with examples
+  - Best practices and security guidelines
+  - Testing strategies and workflows
+  - Advanced features (lifecycle hooks, testnet support)
+
+**Technical Documentation:**
+
+- **[Plugin Architecture](./PLUGIN_ARCHITECTURE.md)** - System design documentation
+  - Architecture overview and design patterns
+  - Core interfaces and components
+  - Plugin generator implementation
+  - Migration summary and benefits
+
+**Contributing:**
+
+- **[Contributing Guide](./CONTRIBUTING.md)** - Contribution workflow
+  - Development setup
+  - Code style and conventions
+  - Pull request process
+  - Security guidelines
 
 ### Current Built-in Plugins
 
@@ -757,11 +860,33 @@ Submit a PR to add your blockchain to BitPaper! 🚀
 
 ## 📚 Additional Resources
 
-- [BIP39 Specification](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki)
-- [Bitcoin Paper Wallets](https://en.bitcoin.it/wiki/Paper_wallet)
-- [Ethereum Private Keys](https://ethereum.org/en/developers/docs/accounts/#account-creation)
-- [Solana Key Pairs](https://docs.solana.com/wallet-guide/cli#keypair-generation)
-- [Plugin Development Guide](./PLUGIN_DEVELOPMENT.md) - Add new blockchains
+### BitPaper Documentation
+
+- **[Plugin Generator Guide](./PLUGIN_GENERATOR.md)** - Automated plugin scaffolding
+- **[Plugin Development Guide](./PLUGIN_DEVELOPMENT.md)** - Complete development documentation
+- **[Contributing Guide](./CONTRIBUTING.md)** - How to contribute to the project
+- **[Plugin Architecture](./PLUGIN_ARCHITECTURE.md)** - Technical design and patterns
+- **[Publishing Guide](./PUBLISHING.md)** - npm publishing workflow
+
+### Cryptocurrency Standards
+
+- **[BIP39 Specification](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki)** - Mnemonic code standard
+- **[BIP32 Specification](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)** - Hierarchical Deterministic Wallets
+- **[BIP44 Specification](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)** - Multi-Account Hierarchy
+- **[SLIP-0044](https://github.com/satoshilabs/slips/blob/master/slip-0044.md)** - Registered coin types
+
+### Blockchain Documentation
+
+- **[Bitcoin Paper Wallets](https://en.bitcoin.it/wiki/Paper_wallet)** - Bitcoin wiki
+- **[Ethereum Private Keys](https://ethereum.org/en/developers/docs/accounts/#account-creation)** - Ethereum docs
+- **[Solana Key Pairs](https://docs.solana.com/wallet-guide/cli#keypair-generation)** - Solana documentation
+
+### Tools & Libraries
+
+- **[Commander.js](https://github.com/tj/commander.js/)** - CLI framework
+- **[Plop](https://plopjs.com/)** - Plugin generator tool
+- **[bitcoinjs-lib](https://github.com/bitcoinjs/bitcoinjs-lib)** - Bitcoin library
+- **[ethers.js](https://docs.ethers.org/)** - Ethereum library
 
 ## 🆘 Support & Issues
 

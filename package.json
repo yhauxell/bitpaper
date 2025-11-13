@@ -1,0 +1,71 @@
+{
+  "name": "bitpaper",
+  "version": "1.0.0",
+  "description": "A secure CLI tool to generate paper wallets for multiple cryptocurrencies (Bitcoin, Ethereum, Solana, Chainlink)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "bitpaper": "./bin/cli.js"
+  },
+  "files": [
+    "dist/**/*",
+    "bin/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build",
+    "prepack": "npm run build",
+    "test:pack": "npm pack --dry-run"
+  },
+  "keywords": [
+    "bitcoin",
+    "ethereum",
+    "solana",
+    "chainlink",
+    "wallet",
+    "paper-wallet",
+    "crypto",
+    "cryptocurrency",
+    "cli",
+    "bip39",
+    "bip32",
+    "bip44",
+    "cold-storage",
+    "offline-wallet",
+    "commander"
+  ],
+  "author": "yausell",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yhauxell/bitpaper.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yhauxell/bitpaper/issues"
+  },
+  "homepage": "https://github.com/yhauxell/bitpaper#readme",
+  "dependencies": {
+    "@solana/web3.js": "^1.95.0",
+    "bip32": "^4.0.0",
+    "bip39": "^3.1.0",
+    "bitcoinjs-lib": "^6.1.5",
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "ethers": "^6.9.0",
+    "ora": "^5.4.1",
+    "tiny-secp256k1": "^2.2.3"
+  },
+  "devDependencies": {
+    "@types/bip39": "^3.0.0",
+    "@types/node": "^20.10.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

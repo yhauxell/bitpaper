@@ -1,0 +1,225 @@
+/**
+ * Wallet Generation Module
+ *
+ * Core functionality for generating cryptocurrency wallets
+ */
+
+import { Keypair } from "@solana/web3.js";
+import { BIP32Factory } from "bip32";
+import * as bip39 from "bip39";
+import * as bitcoin from "bitcoinjs-lib";
+import { ethers } from "ethers";
+import * as ecc from "tiny-secp256k1";
+
+// Initialize BIP32 with tiny-secp256k1
+const bip32 = BIP32Factory(ecc);
+
+// ============================================================================
+// Types
+// ============================================================================
+
+export interface BitcoinWallet {
+  type: "Bitcoin";
+  address: string;
+  privateKey: string;
+  publicKey: string;
+  wif: string; // Wallet Import Format
+}
+
+export interface EthereumWallet {
+  type: "Ethereum" | "Chainlink";
+  address: string;
+  privateKey: string;
+  publicKey: string;
+}
+
+export interface SolanaWallet {
+  type: "Solana";
+  address: string;
+  privateKey: string;
+  publicKey: string;
+}
+
+export interface WalletSet {
+  mnemonic: string;
+  bitcoin: BitcoinWallet;
+  ethereum: EthereumWallet;
+  solana: SolanaWallet;
+  chainlink: EthereumWallet;
+  timestamp: string;
+}
+
+// ============================================================================
+// Configuration
+// ============================================================================
+
+const BITCOIN_NETWORK = bitcoin.networks.bitcoin; // Use bitcoin.networks.testnet for testnet
+
+// ============================================================================
+// Wallet Generation Functions
+// ============================================================================
+
+/**
+ * Generate a Bitcoin wallet from seed
+ */
+export function generateBitcoinWallet(seed: Buffer): BitcoinWallet {
+  // Derive Bitcoin key from seed
+  const root = bip32.fromSeed(seed, BITCOIN_NETWORK);
+
+  // Use BIP44 path for Bitcoin: m/44'/0'/0'/0/0
+  const path = "m/44'/0'/0'/0/0";
+  const child = root.derivePath(path);
+
+  if (!child.privateKey) {
+    throw new Error("Failed to derive Bitcoin private key");
+  }
+
+  // Generate P2WPKH (native segwit) address
+  const { address } = bitcoin.payments.p2wpkh({
+    pubkey: child.publicKey,
+    network: BITCOIN_NETWORK,
+  });
+
+  if (!address) {
+    throw new Error("Failed to generate Bitcoin address");
+  }
+
+  return {
+    type: "Bitcoin",
+    address,
+    privateKey: child.privateKey.toString("hex"),
+    publicKey: child.publicKey.toString("hex"),
+    wif: child.toWIF(),
+  };
+}
+
+/**
+ * Generate an Ethereum wallet from seed
+ */
+export function generateEthereumWallet(
+  seed: Buffer,
+  type: "Ethereum" | "Chainlink" = "Ethereum"
+): EthereumWallet {
+  // Derive Ethereum key from seed using BIP44 path: m/44'/60'/0'/0/0
+  const hdNode = ethers.HDNodeWallet.fromSeed(seed);
+  const path = "m/44'/60'/0'/0/0";
+  const wallet = hdNode.derivePath(path);
+
+  return {
+    type,
+    address: wallet.address,
+    privateKey: wallet.privateKey,
+    publicKey: wallet.publicKey,
+  };
+}
+
+/**
+ * Generate a Solana wallet from seed
+ */
+export function generateSolanaWallet(seed: Buffer): SolanaWallet {
+  // Use first 32 bytes of seed for Solana keypair
+  const keypair = Keypair.fromSeed(seed.slice(0, 32));
+
+  return {
+    type: "Solana",
+    address: keypair.publicKey.toBase58(),
+    privateKey: Buffer.from(keypair.secretKey).toString("hex"),
+    publicKey: keypair.publicKey.toBase58(),
+  };
+}
+
+/**
+ * Generate a complete wallet set with mnemonic
+ */
+export function generateWalletSet(): WalletSet {
+  // Generate a strong mnemonic (24 words for maximum security)
+  const mnemonic = bip39.generateMnemonic(256);
+
+  // Convert mnemonic to seed
+  const seed = bip39.mnemonicToSeedSync(mnemonic);
+
+  // Generate wallets for each blockchain
+  const bitcoin = generateBitcoinWallet(seed);
+  const ethereum = generateEthereumWallet(seed, "Ethereum");
+  const solana = generateSolanaWallet(seed);
+  const chainlink = generateEthereumWallet(seed, "Chainlink");
+
+  return {
+    mnemonic,
+    bitcoin,
+    ethereum,
+    solana,
+    chainlink,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Verify a mnemonic phrase is valid
+ */
+export function verifyMnemonic(mnemonic: string): boolean {
+  return bip39.validateMnemonic(mnemonic);
+}
+
+/**
+ * Format wallet information for display
+ */
+export function formatWalletSet(walletSet: WalletSet, index: number): string {
+  const separator = "=".repeat(80);
+  const lines: string[] = [];
+
+  lines.push("");
+  lines.push(separator);
+  lines.push(`  PAPER WALLET SET #${index}`);
+  lines.push(`  Generated: ${walletSet.timestamp}`);
+  lines.push(separator);
+  lines.push("");
+
+  // Mnemonic
+  lines.push("🔑 SEED PHRASE (BIP39 Mnemonic - 24 words)");
+  lines.push("-".repeat(80));
+  lines.push(walletSet.mnemonic);
+  lines.push("");
+  lines.push(
+    "⚠️  CRITICAL: Store this phrase securely. It can recover ALL wallets below."
+  );
+  lines.push("");
+
+  // Bitcoin
+  lines.push("₿  BITCOIN (BTC)");
+  lines.push("-".repeat(80));
+  lines.push(`Address:     ${walletSet.bitcoin.address}`);
+  lines.push(`Private Key: ${walletSet.bitcoin.privateKey}`);
+  lines.push(`WIF:         ${walletSet.bitcoin.wif}`);
+  lines.push(`Public Key:  ${walletSet.bitcoin.publicKey}`);
+  lines.push("");
+
+  // Ethereum
+  lines.push("♦  ETHEREUM (ETH)");
+  lines.push("-".repeat(80));
+  lines.push(`Address:     ${walletSet.ethereum.address}`);
+  lines.push(`Private Key: ${walletSet.ethereum.privateKey}`);
+  lines.push(`Public Key:  ${walletSet.ethereum.publicKey}`);
+  lines.push("");
+
+  // Chainlink
+  lines.push("🔗 CHAINLINK (LINK)");
+  lines.push("-".repeat(80));
+  lines.push(`Address:     ${walletSet.chainlink.address}`);
+  lines.push(`Private Key: ${walletSet.chainlink.privateKey}`);
+  lines.push("Note: Chainlink uses Ethereum addresses (ERC-20 token)");
+  lines.push("");
+
+  // Solana
+  lines.push("◎  SOLANA (SOL)");
+  lines.push("-".repeat(80));
+  lines.push(`Address:     ${walletSet.solana.address}`);
+  lines.push(`Private Key: ${walletSet.solana.privateKey}`);
+  lines.push(`Public Key:  ${walletSet.solana.publicKey}`);
+  lines.push("");
+
+  lines.push(separator);
+  lines.push("");
+
+  return lines.join("\n");
+}

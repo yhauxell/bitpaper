@@ -41,31 +41,32 @@ This project uses GitHub Actions to automatically publish to npm when code is me
 
 ## 🔄 How It Works
 
-### Automatic Publishing (`publish.yml`)
+### Build and Publish Workflow (`publish.yml`)
 
 **Triggers when:**
 
 - Code is pushed/merged to `main` branch
-- Files in `package.json`, `src/`, or `bin/` change
+- Files in `package.json`, `src/`, `bin/`, or `yarn.lock` change
 
 **What it does:**
 
-1. ✅ Checks if version number changed
-2. ✅ Installs dependencies
-3. ✅ Builds the project
-4. ✅ Publishes to npm (if version changed)
-5. ✅ Creates a git tag (e.g., `v1.0.0`)
+1. ✅ Installs dependencies
+2. ✅ Builds the project (ALWAYS runs for validation)
+3. ✅ Checks if version number changed
+4. ✅ Publishes to npm (only if version changed)
+5. ✅ Creates a git tag (only if version changed, e.g., `v1.0.0`)
 
-**Skip publishing:**
+**Publishing behavior:**
 
-- If version hasn't changed, the workflow runs but skips the publish step
+- Build ALWAYS runs to validate code on main branch
+- Publishing only happens when version changes
+- No redundant workflow runs with CI
 
 ### CI Workflow (`ci.yml`)
 
 **Triggers when:**
 
-- Pull requests to `main`
-- Pushes to `main`
+- Pull requests to `main` (NOT on direct pushes to main)
 
 **What it does:**
 
@@ -73,6 +74,12 @@ This project uses GitHub Actions to automatically publish to npm when code is me
 2. ✅ Installs dependencies
 3. ✅ Builds the project
 4. ✅ Verifies build output
+
+**Why separate?**
+
+- CI validates PRs before merge
+- Build & Publish validates and publishes on main
+- No redundant workflow runs!
 
 ## 📦 Publishing Workflow
 

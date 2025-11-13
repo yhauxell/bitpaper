@@ -1,6 +1,6 @@
 # BitPaper 🔐
 
-[![CI](https://github.com/yhauxell/bitpaper/actions/workflows/ci.yml/badge.svg)](https://github.com/yhauxell/bitpaper/actions/workflows/ci.yml)
+[![Build and Publish](https://github.com/yhauxell/bitpaper/actions/workflows/publish.yml/badge.svg)](https://github.com/yhauxell/bitpaper/actions/workflows/publish.yml)
 [![npm version](https://badge.fury.io/js/bitpaper.svg)](https://www.npmjs.com/package/bitpaper)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

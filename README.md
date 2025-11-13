@@ -8,6 +8,146 @@ A secure CLI tool to generate paper wallets for multiple cryptocurrencies: **Bit
 
 Built with [Commander.js](https://github.com/tj/commander.js/) - the most popular Node.js CLI framework.
 
+## 📖 What is a Paper Wallet?
+
+A **paper wallet** is a physical document containing your cryptocurrency addresses and private keys, stored completely offline. Think of it as printing out your bank account information, but with cryptographic keys instead.
+
+### Why "Paper"?
+
+The name refers to the **storage method**, not the addresses themselves:
+
+```
+Digital Keys → Written/Printed on Paper → "Paper Wallet"
+```
+
+### Types of Crypto Storage:
+
+| Type                | Storage          | Example            | Online? |
+| ------------------- | ---------------- | ------------------ | ------- |
+| **Hot Wallet**      | Software, Online | MetaMask, Coinbase | ✅ Yes  |
+| **Hardware Wallet** | USB Device       | Ledger, Trezor     | ❌ No   |
+| **Paper Wallet**    | Physical Paper   | BitPaper output    | ❌ No   |
+
+### Benefits:
+
+- ✅ **100% offline** - Immune to hacking
+- ✅ **No electronics** - Can't fail or corrupt
+- ✅ **Long-term storage** - Works for decades
+- ✅ **No batteries** - Unlike hardware wallets
+- ✅ **Low cost** - Just paper and ink
+
+### Drawbacks:
+
+- ⚠️ Physical damage (fire, water, deterioration)
+- ⚠️ Can be lost or stolen (like cash)
+- ⚠️ Not convenient for frequent transactions
+- ⚠️ Must manually type keys when spending
+
+## 🔐 How Cryptocurrency Addresses Work
+
+### The Key Concept: Math, Not Registration
+
+**Important:** Cryptocurrency addresses are generated using **pure mathematics** - they don't need to be "registered" on the blockchain!
+
+```
+Traditional Banking:
+Bank assigns you account number → Stored in bank database → Now you can receive money
+
+Cryptocurrency:
+You generate address with math → No database entry → Can receive crypto immediately
+```
+
+### What BitPaper Does:
+
+```typescript
+1. Generate Random Number (256 bits of entropy)
+   ↓
+2. Create Mnemonic Seed Phrase (24 words)
+   ↓
+3. Derive Keys Using Elliptic Curve Cryptography
+   ↓
+4. Generate Public Key from Private Key (one-way math)
+   ↓
+5. Hash Public Key to Create Address (more one-way math)
+```
+
+**All of this happens locally on your computer. No internet. No blockchain interaction.**
+
+### When Does the Blockchain Get Involved?
+
+The blockchain **only** knows about your address when:
+
+#### ✅ Someone Sends You Funds:
+
+```
+Before first transaction:
+- Your address exists: Only in your wallet
+- Blockchain record: None (address is "invisible")
+
+After first transaction:
+- Transaction broadcast to network
+- Blockchain records: "0.001 BTC sent to YOUR_ADDRESS"
+- Now your address appears on blockchain with balance
+```
+
+#### ✅ You Spend Funds:
+
+```
+You sign transaction with private key
+→ Broadcast to network
+→ Blockchain verifies signature matches address
+→ Transaction processed
+```
+
+### Are These Real Addresses?
+
+**YES! 100% real.** Here's why:
+
+1. **Mathematically Valid** - Generated using the same cryptographic standards as hardware wallets
+2. **Blockchain-Ready** - Will be accepted immediately when first used
+3. **Industry Standard Libraries** - Uses the same code as MetaMask, Ledger, and Trezor
+4. **Can Hold Real Value** - Send real cryptocurrency to them and it will be there
+
+### The Address Space is HUGE
+
+```
+Bitcoin addresses: 2^160 = ~1.4 × 10^48 possible addresses
+Ethereum addresses: 2^160 = ~1.4 × 10^48 possible addresses
+Solana addresses: 2^256 = ~1.15 × 10^77 possible addresses
+
+For comparison:
+- Atoms in human body: ~7 × 10^27
+- Stars in observable universe: ~10^24
+- Grains of sand on Earth: ~7.5 × 10^18
+```
+
+There are more Bitcoin addresses than atoms in a million human bodies!
+
+### Could Someone Else Generate the Same Address?
+
+**Technically yes, but practically... NEVER.**
+
+```
+Probability of collision: ~1 in 10^48
+
+You're more likely to:
+✓ Win the lottery 6 times in a row
+✓ Be struck by lightning 10 times in one day
+✓ Find a specific atom in the universe
+
+To get 50% chance of ONE collision:
+- Need to generate: 2^80 addresses (1.2 septillion)
+- At 1 billion/second: Would take 38 BILLION years
+- Age of universe: 13.8 billion years
+
+Historical evidence:
+- Bitcoin launched: 2009
+- Addresses generated: Billions+
+- Collisions found: ZERO
+```
+
+**The cryptographic security of address generation is rock solid!** This is why wallets can generate addresses offline without checking if they "already exist."
+
 ## ⚠️ Critical Security Warnings
 
 **READ BEFORE USING:**
@@ -67,7 +207,45 @@ node bin/cli.js generate
 bitpaper generate
 ```
 
-This generates one wallet set containing addresses and keys for Bitcoin, Ethereum, Solana, and Chainlink.
+This will show an **interactive selection menu** where you can choose which cryptocurrencies to generate (all are selected by default).
+
+**Interactive Example:**
+
+```
+? Select cryptocurrencies to generate: (Press <space> to select, <a> to toggle all, <i> to invert selection)
+❯◉ ₿  Bitcoin (BTC)
+ ◉ ♦  Ethereum (ETH)
+ ◉ ◎  Solana (SOL)
+ ◉ 🔗 Chainlink (LINK)
+```
+
+### Select Specific Cryptocurrencies (Non-Interactive)
+
+```bash
+# Generate only Bitcoin and Ethereum
+bitpaper generate --currencies bitcoin,ethereum
+
+# Generate only Solana
+bitpaper generate --currencies solana
+
+# Mix and match
+bitpaper generate --currencies bitcoin,solana,chainlink
+```
+
+### Dry Run (Test Without Generating Real Keys)
+
+```bash
+bitpaper generate --dry-run
+```
+
+**Perfect for:**
+
+- ✅ Testing the CLI before real use
+- ✅ Seeing the output format
+- ✅ Demonstrations and screenshots
+- ✅ CI/CD pipeline testing
+
+**⚠️ NO real cryptographic keys are generated in dry-run mode!**
 
 ### Generate Multiple Wallet Sets
 
@@ -109,6 +287,19 @@ Checks if a 24-word mnemonic phrase is valid.
 bitpaper info
 ```
 
+### Combine Options
+
+```bash
+# Generate 3 sets with only Bitcoin and Ethereum, save to file
+bitpaper generate --count 3 --currencies bitcoin,ethereum --output wallets.txt
+
+# Dry-run with specific currencies
+bitpaper generate --dry-run --currencies solana
+
+# Non-interactive with no warnings
+bitpaper generate --currencies bitcoin --no-warnings --no-instructions
+```
+
 ### Show Help
 
 ```bash
@@ -129,6 +320,7 @@ Each wallet set includes:
 ### ₿ Bitcoin (BTC)
 
 - **Address**: For receiving Bitcoin
+- **Explorer Link**: Direct link to Blockchair (check balance/transactions)
 - **Private Key**: For sending Bitcoin or importing to wallets
 - **WIF** (Wallet Import Format): Alternative private key format
 - **Public Key**: For verification
@@ -138,6 +330,7 @@ Each wallet set includes:
 ### ♦ Ethereum (ETH)
 
 - **Address**: For receiving Ethereum
+- **Explorer Link**: Direct link to Etherscan (check balance/transactions)
 - **Private Key**: For sending ETH or importing to MetaMask
 - **Public Key**: For verification
 - Works with all ERC-20 tokens
@@ -146,6 +339,7 @@ Each wallet set includes:
 ### 🔗 Chainlink (LINK)
 
 - **Address**: For receiving LINK tokens
+- **Explorer Link**: Direct link to Etherscan (check balance/transactions)
 - **Private Key**: For sending LINK or importing to wallets
 - **Note**: Uses Ethereum addresses (LINK is an ERC-20 token)
 - **Derivation Path**: `m/44'/60'/0'/0/0`
@@ -153,6 +347,7 @@ Each wallet set includes:
 ### ◎ Solana (SOL)
 
 - **Address**: For receiving Solana
+- **Explorer Link**: Direct link to Solscan (check balance/transactions)
 - **Private Key**: For sending SOL or importing to Phantom/Solflare
 - **Public Key**: For verification
 

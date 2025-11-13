@@ -21,9 +21,14 @@ import chalk from "chalk";
 import { Command } from "commander";
 import * as crypto from "crypto";
 import * as fs from "fs";
+import inquirer from "inquirer";
 import ora from "ora";
 import { printSecurityWarnings, printUsageInstructions } from "./ui";
-import { formatWalletSet, generateWalletSet } from "./wallet-generator";
+import {
+  formatWalletSet,
+  generateDummyWalletSet,
+  generateWalletSet,
+} from "./wallet-generator";
 
 const program = new Command();
 
@@ -37,6 +42,11 @@ program
   .description("Generate paper wallet(s)")
   .option("-c, --count <number>", "Number of wallet sets to generate", "1")
   .option("-o, --output <file>", "Save output to file")
+  .option(
+    "--currencies <list>",
+    "Comma-separated list of currencies (bitcoin,ethereum,solana,chainlink)"
+  )
+  .option("--dry-run", "Show output format without generating real addresses")
   .option("--no-warnings", "Skip security warnings")
   .option("--no-instructions", "Skip usage instructions")
   .action(async (options) => {
@@ -47,27 +57,118 @@ program
       process.exit(1);
     }
 
-    if (options.warnings) {
+    // Handle currency selection
+    let selectedCurrencies: string[] = [];
+
+    if (options.currencies) {
+      // Parse comma-separated list from command line
+      selectedCurrencies = options.currencies
+        .split(",")
+        .map((c: string) => c.trim().toLowerCase())
+        .filter((c: string) =>
+          ["bitcoin", "ethereum", "solana", "chainlink"].includes(c)
+        );
+
+      if (selectedCurrencies.length === 0) {
+        console.error(
+          chalk.red(
+            "❌ Error: No valid currencies specified. Use: bitcoin, ethereum, solana, chainlink"
+          )
+        );
+        process.exit(1);
+      }
+    } else {
+      // Interactive selection using inquirer
+      const answers = await inquirer.prompt([
+        {
+          type: "checkbox",
+          name: "currencies",
+          message: "Select cryptocurrencies to generate:",
+          choices: [
+            {
+              name: "₿  Bitcoin (BTC)",
+              value: "bitcoin",
+              checked: true,
+            },
+            {
+              name: "♦  Ethereum (ETH)",
+              value: "ethereum",
+              checked: true,
+            },
+            {
+              name: "◎  Solana (SOL)",
+              value: "solana",
+              checked: true,
+            },
+            {
+              name: "🔗 Chainlink (LINK)",
+              value: "chainlink",
+              checked: true,
+            },
+          ],
+          validate: (answer: string[]) => {
+            if (answer.length < 1) {
+              return "You must choose at least one cryptocurrency.";
+            }
+            return true;
+          },
+        },
+      ]);
+
+      selectedCurrencies = answers.currencies;
+    }
+
+    console.log("");
+    console.log(
+      chalk.cyan(
+        `📝 Generating wallets for: ${selectedCurrencies
+          .map((c) => c.charAt(0).toUpperCase() + c.slice(1))
+          .join(", ")}`
+      )
+    );
+    console.log("");
+
+    // Show dry-run notice
+    if (options.dryRun) {
+      console.log("");
+      console.log(chalk.yellow.bold("🔍 DRY-RUN MODE"));
+      console.log(
+        chalk.yellow(
+          "No real addresses are being generated. This is for demonstration only."
+        )
+      );
+      console.log(
+        chalk.yellow("⚠️  DO NOT send real funds to these addresses!")
+      );
+      console.log("");
+    }
+
+    if (options.warnings && !options.dryRun) {
       printSecurityWarnings();
     }
 
-    // Verify cryptographic entropy is available
-    try {
-      crypto.randomBytes(32);
-    } catch (error) {
-      console.error(
-        chalk.red("❌ Error: Insufficient entropy for secure key generation")
-      );
-      console.error(
-        chalk.yellow(
-          "Please ensure your system has adequate random number generation."
-        )
-      );
-      process.exit(1);
+    // Skip entropy check in dry-run mode
+    if (!options.dryRun) {
+      // Verify cryptographic entropy is available
+      try {
+        crypto.randomBytes(32);
+      } catch (error) {
+        console.error(
+          chalk.red("❌ Error: Insufficient entropy for secure key generation")
+        );
+        console.error(
+          chalk.yellow(
+            "Please ensure your system has adequate random number generation."
+          )
+        );
+        process.exit(1);
+      }
     }
 
     const spinner = ora({
-      text: `Generating ${count} wallet set(s)...`,
+      text: options.dryRun
+        ? `Generating ${count} example wallet set(s)...`
+        : `Generating ${count} wallet set(s)...`,
       color: "cyan",
     }).start();
 
@@ -75,13 +176,21 @@ program
       const outputs: string[] = [];
 
       for (let i = 1; i <= count; i++) {
-        spinner.text = `Generating wallet set ${i}/${count}...`;
-        const walletSet = generateWalletSet();
+        spinner.text = options.dryRun
+          ? `Generating example wallet set ${i}/${count}...`
+          : `Generating wallet set ${i}/${count}...`;
+        const walletSet = options.dryRun
+          ? generateDummyWalletSet(selectedCurrencies)
+          : generateWalletSet(selectedCurrencies);
         const formatted = formatWalletSet(walletSet, i);
         outputs.push(formatted);
       }
 
-      spinner.succeed(chalk.green(`Generated ${count} wallet set(s)!`));
+      spinner.succeed(
+        options.dryRun
+          ? chalk.yellow(`Generated ${count} example wallet set(s)!`)
+          : chalk.green(`Generated ${count} wallet set(s)!`)
+      );
       console.log("");
 
       // Display or save output
@@ -90,31 +199,46 @@ program
         fs.writeFileSync(options.output, content, "utf-8");
         console.log(chalk.green(`✅ Wallets saved to: ${options.output}`));
         console.log("");
-        console.log(chalk.yellow("⚠️  Remember to:"));
-        console.log(
-          chalk.yellow("   1. Delete this file after printing/backing up")
-        );
-        console.log(
-          chalk.yellow(
-            "   2. Securely wipe the file (use shred or similar tools)"
-          )
-        );
-        console.log(
-          chalk.yellow(
-            "   3. Never store unencrypted wallets on networked devices"
-          )
-        );
-        console.log("");
+        if (!options.dryRun) {
+          console.log(chalk.yellow("⚠️  Remember to:"));
+          console.log(
+            chalk.yellow("   1. Delete this file after printing/backing up")
+          );
+          console.log(
+            chalk.yellow(
+              "   2. Securely wipe the file (use shred or similar tools)"
+            )
+          );
+          console.log(
+            chalk.yellow(
+              "   3. Never store unencrypted wallets on networked devices"
+            )
+          );
+          console.log("");
+        }
       } else {
         outputs.forEach((output) => console.log(output));
       }
 
-      if (options.instructions) {
+      if (options.instructions && !options.dryRun) {
         printUsageInstructions();
       }
 
-      console.log(chalk.green("✅ Generation complete!"));
-      console.log("");
+      if (options.dryRun) {
+        console.log(chalk.yellow.bold("🔍 DRY-RUN MODE COMPLETE"));
+        console.log(
+          chalk.yellow(
+            "These were example addresses only. No real keys generated."
+          )
+        );
+        console.log(
+          chalk.yellow("Remove --dry-run flag to generate real wallets.")
+        );
+        console.log("");
+      } else {
+        console.log(chalk.green("✅ Generation complete!"));
+        console.log("");
+      }
     } catch (error) {
       spinner.fail(chalk.red("Failed to generate wallets"));
       console.error(chalk.red("❌ Error:"), error);

@@ -42,11 +42,12 @@ export interface SolanaWallet {
 
 export interface WalletSet {
   mnemonic: string;
-  bitcoin: BitcoinWallet;
-  ethereum: EthereumWallet;
-  solana: SolanaWallet;
-  chainlink: EthereumWallet;
+  bitcoin?: BitcoinWallet;
+  ethereum?: EthereumWallet;
+  solana?: SolanaWallet;
+  chainlink?: EthereumWallet;
   timestamp: string;
+  selectedCurrencies: string[];
 }
 
 // ============================================================================
@@ -131,27 +132,101 @@ export function generateSolanaWallet(seed: Buffer): SolanaWallet {
 /**
  * Generate a complete wallet set with mnemonic
  */
-export function generateWalletSet(): WalletSet {
+export function generateWalletSet(currencies?: string[]): WalletSet {
+  // Default to all currencies if none specified
+  const selected = currencies || ["bitcoin", "ethereum", "solana", "chainlink"];
+
   // Generate a strong mnemonic (24 words for maximum security)
   const mnemonic = bip39.generateMnemonic(256);
 
   // Convert mnemonic to seed
   const seed = bip39.mnemonicToSeedSync(mnemonic);
 
-  // Generate wallets for each blockchain
-  const bitcoin = generateBitcoinWallet(seed);
-  const ethereum = generateEthereumWallet(seed, "Ethereum");
-  const solana = generateSolanaWallet(seed);
-  const chainlink = generateEthereumWallet(seed, "Chainlink");
-
-  return {
+  // Generate wallets for selected blockchains
+  const walletSet: WalletSet = {
     mnemonic,
-    bitcoin,
-    ethereum,
-    solana,
-    chainlink,
     timestamp: new Date().toISOString(),
+    selectedCurrencies: selected,
   };
+
+  if (selected.includes("bitcoin")) {
+    walletSet.bitcoin = generateBitcoinWallet(seed);
+  }
+
+  if (selected.includes("ethereum")) {
+    walletSet.ethereum = generateEthereumWallet(seed, "Ethereum");
+  }
+
+  if (selected.includes("solana")) {
+    walletSet.solana = generateSolanaWallet(seed);
+  }
+
+  if (selected.includes("chainlink")) {
+    walletSet.chainlink = generateEthereumWallet(seed, "Chainlink");
+  }
+
+  return walletSet;
+}
+
+/**
+ * Generate a dummy wallet set for dry-run mode (no real keys generated)
+ */
+export function generateDummyWalletSet(currencies?: string[]): WalletSet {
+  // Default to all currencies if none specified
+  const selected = currencies || ["bitcoin", "ethereum", "solana", "chainlink"];
+
+  const walletSet: WalletSet = {
+    mnemonic:
+      "example word word word word word word word word word word word word word word word word word word word word word word word word",
+    timestamp: new Date().toISOString(),
+    selectedCurrencies: selected,
+  };
+
+  if (selected.includes("bitcoin")) {
+    walletSet.bitcoin = {
+      type: "Bitcoin",
+      address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+      privateKey:
+        "0000000000000000000000000000000000000000000000000000000000000000",
+      publicKey:
+        "000000000000000000000000000000000000000000000000000000000000000000",
+      wif: "KwDiBf89QgGbjEhKnhXJuH7LrciVrZi3qYjgd9M7rFU73sVHnoWn",
+    };
+  }
+
+  if (selected.includes("ethereum")) {
+    walletSet.ethereum = {
+      type: "Ethereum",
+      address: "0x0000000000000000000000000000000000000000",
+      privateKey:
+        "0x0000000000000000000000000000000000000000000000000000000000000000",
+      publicKey:
+        "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    };
+  }
+
+  if (selected.includes("solana")) {
+    walletSet.solana = {
+      type: "Solana",
+      address: "11111111111111111111111111111111",
+      privateKey:
+        "0000000000000000000000000000000000000000000000000000000000000000",
+      publicKey: "11111111111111111111111111111111",
+    };
+  }
+
+  if (selected.includes("chainlink")) {
+    walletSet.chainlink = {
+      type: "Chainlink",
+      address: "0x0000000000000000000000000000000000000000",
+      privateKey:
+        "0x0000000000000000000000000000000000000000000000000000000000000000",
+      publicKey:
+        "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    };
+  }
+
+  return walletSet;
 }
 
 /**
@@ -186,37 +261,57 @@ export function formatWalletSet(walletSet: WalletSet, index: number): string {
   lines.push("");
 
   // Bitcoin
-  lines.push("₿  BITCOIN (BTC)");
-  lines.push("-".repeat(80));
-  lines.push(`Address:     ${walletSet.bitcoin.address}`);
-  lines.push(`Private Key: ${walletSet.bitcoin.privateKey}`);
-  lines.push(`WIF:         ${walletSet.bitcoin.wif}`);
-  lines.push(`Public Key:  ${walletSet.bitcoin.publicKey}`);
-  lines.push("");
+  if (walletSet.bitcoin) {
+    lines.push("₿  BITCOIN (BTC)");
+    lines.push("-".repeat(80));
+    lines.push(`Address:     ${walletSet.bitcoin.address}`);
+    lines.push(
+      `Explorer:    https://blockchair.com/bitcoin/address/${walletSet.bitcoin.address}`
+    );
+    lines.push(`Private Key: ${walletSet.bitcoin.privateKey}`);
+    lines.push(`WIF:         ${walletSet.bitcoin.wif}`);
+    lines.push(`Public Key:  ${walletSet.bitcoin.publicKey}`);
+    lines.push("");
+  }
 
   // Ethereum
-  lines.push("♦  ETHEREUM (ETH)");
-  lines.push("-".repeat(80));
-  lines.push(`Address:     ${walletSet.ethereum.address}`);
-  lines.push(`Private Key: ${walletSet.ethereum.privateKey}`);
-  lines.push(`Public Key:  ${walletSet.ethereum.publicKey}`);
-  lines.push("");
+  if (walletSet.ethereum) {
+    lines.push("♦  ETHEREUM (ETH)");
+    lines.push("-".repeat(80));
+    lines.push(`Address:     ${walletSet.ethereum.address}`);
+    lines.push(
+      `Explorer:    https://etherscan.io/address/${walletSet.ethereum.address}`
+    );
+    lines.push(`Private Key: ${walletSet.ethereum.privateKey}`);
+    lines.push(`Public Key:  ${walletSet.ethereum.publicKey}`);
+    lines.push("");
+  }
 
   // Chainlink
-  lines.push("🔗 CHAINLINK (LINK)");
-  lines.push("-".repeat(80));
-  lines.push(`Address:     ${walletSet.chainlink.address}`);
-  lines.push(`Private Key: ${walletSet.chainlink.privateKey}`);
-  lines.push("Note: Chainlink uses Ethereum addresses (ERC-20 token)");
-  lines.push("");
+  if (walletSet.chainlink) {
+    lines.push("🔗 CHAINLINK (LINK)");
+    lines.push("-".repeat(80));
+    lines.push(`Address:     ${walletSet.chainlink.address}`);
+    lines.push(
+      `Explorer:    https://etherscan.io/address/${walletSet.chainlink.address}`
+    );
+    lines.push(`Private Key: ${walletSet.chainlink.privateKey}`);
+    lines.push("Note: Chainlink uses Ethereum addresses (ERC-20 token)");
+    lines.push("");
+  }
 
   // Solana
-  lines.push("◎  SOLANA (SOL)");
-  lines.push("-".repeat(80));
-  lines.push(`Address:     ${walletSet.solana.address}`);
-  lines.push(`Private Key: ${walletSet.solana.privateKey}`);
-  lines.push(`Public Key:  ${walletSet.solana.publicKey}`);
-  lines.push("");
+  if (walletSet.solana) {
+    lines.push("◎  SOLANA (SOL)");
+    lines.push("-".repeat(80));
+    lines.push(`Address:     ${walletSet.solana.address}`);
+    lines.push(
+      `Explorer:    https://solscan.io/account/${walletSet.solana.address}`
+    );
+    lines.push(`Private Key: ${walletSet.solana.privateKey}`);
+    lines.push(`Public Key:  ${walletSet.solana.publicKey}`);
+    lines.push("");
+  }
 
   lines.push(separator);
   lines.push("");

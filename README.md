@@ -267,6 +267,45 @@ bitpaper generate --currencies solana
 bitpaper generate --currencies bitcoin,solana,chainlink
 ```
 
+### Address Format Selection
+
+Choose which address format(s) to display for currencies that support multiple formats (e.g., Bitcoin):
+
+```bash
+# Show only Legacy (P2PKH) addresses (starts with "1")
+bitpaper generate --currencies bitcoin --format legacy
+
+# Show only P2SH-SegWit addresses (starts with "3")
+bitpaper generate --currencies bitcoin --format p2sh-segwit
+
+# Show only Native SegWit addresses (starts with "bc1") - Most efficient
+bitpaper generate --currencies bitcoin --format native-segwit
+
+# Show all three formats (default)
+bitpaper generate --currencies bitcoin --format all
+```
+
+**📋 Format Support by Currency:**
+
+| Currency  | Multiple Formats? | Notes                              |
+| --------- | ----------------- | ---------------------------------- |
+| Bitcoin   | ✅ Yes            | Legacy, P2SH-SegWit, Native SegWit |
+| Ethereum  | ❌ No             | Single format (ERC-20 standard)    |
+| Solana    | ❌ No             | Single format (Ed25519 keypair)    |
+| Chainlink | ❌ No             | Uses Ethereum addresses (ERC-20)   |
+
+💡 The `--format` option only affects currencies with multiple address formats. Other currencies will show a helpful message if `--format` is used.
+
+**Format Comparison:**
+
+| Format             | Prefix | Fees   | Compatibility | Use Case                     |
+| ------------------ | ------ | ------ | ------------- | ---------------------------- |
+| **Legacy (P2PKH)** | `1`    | Higher | Maximum       | Older wallets/exchanges      |
+| **P2SH-SegWit**    | `3`    | Medium | Good          | Backward-compatible SegWit   |
+| **Native SegWit**  | `bc1`  | Lowest | Modern        | ⭐ Recommended for new users |
+
+💡 **All three formats share the same private key** - you can receive Bitcoin at any of them and access the funds with the same private key.
+
 ### Dry Run (Test Without Generating Real Keys)
 
 ```bash
@@ -328,11 +367,17 @@ bitpaper info
 # Generate 3 sets with only Bitcoin and Ethereum, save to file
 bitpaper generate --count 3 --currencies bitcoin,ethereum --output wallets.txt
 
+# Bitcoin with only Native SegWit format
+bitpaper generate --currencies bitcoin --format native-segwit
+
 # Dry-run with specific currencies
 bitpaper generate --dry-run --currencies solana
 
-# Non-interactive with no warnings
-bitpaper generate --currencies bitcoin --no-warnings --no-instructions
+# Multiple Bitcoin wallets with legacy format only
+bitpaper generate --count 5 --currencies bitcoin --format legacy --output legacy-wallets.txt
+
+# Non-interactive with no warnings and specific format
+bitpaper generate --currencies bitcoin --format p2sh-segwit --no-warnings --no-instructions
 ```
 
 ### Show Help
@@ -397,13 +442,16 @@ Each wallet set includes:
 
 ### ₿ Bitcoin (BTC)
 
-- **Address**: For receiving Bitcoin
+- **Multiple Address Formats**: Choose the format that works best for your wallet/exchange:
+  - **Legacy (P2PKH)**: Starts with "1" - Maximum compatibility, higher fees
+  - **P2SH-SegWit**: Starts with "3" - SegWit with backward compatibility, medium fees
+  - **Native SegWit (P2WPKH)**: Starts with "bc1" - ⭐ Recommended, lowest fees (~40% lower)
+- **All addresses** are derived from the same private key
 - **Explorer Link**: Direct link to Blockchair (check balance/transactions)
 - **QR Code**: Scannable QR code for easy address sharing
 - **Private Key**: For sending Bitcoin or importing to wallets
 - **WIF** (Wallet Import Format): Alternative private key format
 - **Public Key**: For verification
-- **Format**: Native SegWit (P2WPKH) for lower fees
 - **Derivation Path**: `m/44'/0'/0'/0/0`
 
 ### ♦ Ethereum (ETH)
@@ -554,7 +602,10 @@ Always test with small amounts first:
 - **BIP44**: Multi-account hierarchy for deterministic wallets
   - Bitcoin: `m/44'/0'/0'/0/0`
   - Ethereum: `m/44'/60'/0'/0/0`
-- **P2WPKH**: Bitcoin Native SegWit addresses (lower fees)
+- **Bitcoin Address Formats**:
+  - **P2PKH**: Legacy format (starts with "1")
+  - **P2SH**: Pay-to-Script-Hash, used for SegWit compatibility (starts with "3")
+  - **P2WPKH**: Native SegWit addresses (starts with "bc1", lowest fees)
 
 ### Dependencies
 
@@ -841,7 +892,7 @@ This interactive command will:
 
 ### Current Built-in Plugins
 
-- **Bitcoin** (`src/plugins/bitcoin/`) - Native SegWit support
+- **Bitcoin** (`src/plugins/bitcoin/`) - Multi-format support (Legacy P2PKH, P2SH-SegWit, Native SegWit)
 - **Ethereum** (`src/plugins/ethereum/`) - ERC-20 compatible
 - **Solana** (`src/plugins/solana/`) - Ed25519 keypairs
 - **Chainlink** (`src/plugins/chainlink/`) - ERC-20 token

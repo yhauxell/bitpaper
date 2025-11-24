@@ -54,6 +54,11 @@ program
     "--currencies <list>",
     "Comma-separated list of currencies (bitcoin,ethereum,solana,chainlink)"
   )
+  .option(
+    "--format <format>",
+    "Address format for supported currencies (e.g., Bitcoin: legacy, p2sh-segwit, native-segwit, or all) (default: all)",
+    "all"
+  )
   .option("--dry-run", "Show output format without generating real addresses")
   .option("--no-warnings", "Skip security warnings")
   .option("--no-instructions", "Skip usage instructions")
@@ -64,6 +69,10 @@ program
       console.error(chalk.red("❌ Error: Count must be a positive number"));
       process.exit(1);
     }
+
+    // Store format preference globally for plugins to access
+    const formatPreference = options.format.toLowerCase();
+    (global as any).__formatPreference = formatPreference;
 
     // Handle currency selection
     let selectedCurrencies: string[] = [];

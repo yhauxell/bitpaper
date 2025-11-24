@@ -3,8 +3,8 @@
   "name": "Bitcoin",
   "symbol": "BTC",
   "icon": "₿",
-  "version": "1.0.0",
-  "description": "Bitcoin wallet generation plugin with Native SegWit (P2WPKH) support",
+  "version": "1.1.0",
+  "description": "Bitcoin wallet generation plugin with multiple address formats (Legacy P2PKH, P2SH-SegWit, Native SegWit)",
   "author": "BitPaper Team",
   "dependencies": {
     "bitcoinjs-lib": "^6.1.5",
@@ -12,9 +12,16 @@
     "tiny-secp256k1": "^2.2.3"
   },
   "features": {
+    "legacyP2PKH": true,
+    "p2shSegwit": true,
     "nativeSegwit": true,
     "multipleFormats": true,
     "testnet": false
+  },
+  "addressFormats": {
+    "legacy": "P2PKH (starts with 1)",
+    "p2sh-segwit": "P2SH-SegWit (starts with 3)",
+    "native-segwit": "Native SegWit (starts with bc1)"
   },
   "derivationPath": "m/44'/0'/0'/0/0",
   "explorerUrls": {

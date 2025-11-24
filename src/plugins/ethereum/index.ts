@@ -49,6 +49,19 @@ class EthereumProvider implements BlockchainProvider {
       })`
     );
     lines.push("-".repeat(80));
+
+    // Check if user requested a specific format
+    const formatPreference = (global as any).__formatPreference;
+    if (formatPreference && formatPreference !== "all") {
+      lines.push(
+        `ℹ️  Note: ${this.metadata.name} uses a single address format (ERC-20 standard).`
+      );
+      lines.push(
+        `   The --format option only applies to currencies with multiple formats (e.g., Bitcoin).`
+      );
+      lines.push("");
+    }
+
     lines.push(`Address:     ${wallet.address}`);
     lines.push(`Explorer:    ${this.getExplorerUrl(wallet.address)}`);
     lines.push("");

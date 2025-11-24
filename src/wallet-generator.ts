@@ -22,6 +22,7 @@ export interface BitcoinWallet {
   privateKey: string;
   publicKey: string;
   wif: string;
+  formats?: Record<string, string>;
 }
 
 export interface EthereumWallet {
@@ -114,6 +115,7 @@ function generateWalletSetFromSeed(
             privateKey: wallet.privateKey,
             publicKey: wallet.publicKey,
             wif: wallet.additionalData?.wif || "",
+            formats: wallet.additionalData?.formats,
           };
           break;
         case "ethereum":
@@ -221,12 +223,22 @@ export async function formatWalletSet(
 
     if (wallet) {
       // Convert legacy wallet to plugin WalletInfo format
+      const additionalData: Record<string, any> = {};
+      
+      if ((wallet as any).wif) {
+        additionalData.wif = (wallet as any).wif;
+      }
+      
+      if ((wallet as any).formats) {
+        additionalData.formats = (wallet as any).formats;
+      }
+
       const walletInfo = {
         address: wallet.address,
         privateKey: wallet.privateKey,
         publicKey: wallet.publicKey,
-        additionalData: (wallet as any).wif
-          ? { wif: (wallet as any).wif }
+        additionalData: Object.keys(additionalData).length > 0 
+          ? additionalData 
           : undefined,
       };
 

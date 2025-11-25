@@ -15,7 +15,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       id-token: write
 
     steps:
@@ -50,8 +50,6 @@ jobs:
       - name: Publish to npm
         if: steps.version-check.outputs.changed == 'true'
         run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Get package version
         if: steps.version-check.outputs.changed == 'true'

@@ -1,0 +1,143 @@
+# GitHub Labels Configuration
+# These labels are used for automatic changelog generation
+# Apply them to PRs and issues to categorize changes
+
+# Features & Enhancements
+- name: "feature"
+  color: "0E8A16"
+  description: "New feature or functionality"
+  
+- name: "feat"
+  color: "0E8A16"
+  description: "New feature (conventional commit alias)"
+  
+- name: "enhancement"
+  color: "84B6EB"
+  description: "Improvement to existing feature"
+
+# Bug Fixes
+- name: "bug"
+  color: "D73A4A"
+  description: "Something isn't working"
+  
+- name: "fix"
+  color: "D73A4A"
+  description: "Bug fix (conventional commit alias)"
+  
+- name: "bugfix"
+  color: "D73A4A"
+  description: "Bug fix"
+
+# Documentation
+- name: "docs"
+  color: "0075CA"
+  description: "Documentation improvements"
+  
+- name: "documentation"
+  color: "0075CA"
+  description: "Documentation improvements"
+
+# Maintenance
+- name: "chore"
+  color: "FEF2C0"
+  description: "Maintenance and chores"
+  
+- name: "refactor"
+  color: "FBE181"
+  description: "Code refactoring"
+  
+- name: "test"
+  color: "E99695"
+  description: "Testing improvements"
+  
+- name: "style"
+  color: "FEF2C0"
+  description: "Code style updates"
+
+# Security & Performance
+- name: "security"
+  color: "D93F0B"
+  description: "Security improvements"
+  
+- name: "performance"
+  color: "5319E7"
+  description: "Performance improvements"
+  
+- name: "perf"
+  color: "5319E7"
+  description: "Performance improvements (alias)"
+
+# UI/UX
+- name: "ui"
+  color: "D876E3"
+  description: "User interface improvements"
+  
+- name: "ux"
+  color: "D876E3"
+  description: "User experience improvements"
+  
+- name: "design"
+  color: "D876E3"
+  description: "Design improvements"
+
+# Blockchain Specific
+- name: "blockchain"
+  color: "F9D0C4"
+  description: "Blockchain-related changes"
+  
+- name: "plugin"
+  color: "C2E0C6"
+  description: "Plugin system changes"
+
+# Dependencies
+- name: "dependencies"
+  color: "0366D6"
+  description: "Dependency updates"
+  
+- name: "dependabot"
+  color: "0366D6"
+  description: "Dependabot pull requests"
+
+# Priority & Status
+- name: "priority: high"
+  color: "B60205"
+  description: "High priority issue"
+  
+- name: "priority: low"
+  color: "E99695"
+  description: "Low priority issue"
+  
+- name: "good first issue"
+  color: "7057FF"
+  description: "Good for newcomers"
+  
+- name: "help wanted"
+  color: "008672"
+  description: "Extra attention is needed"
+
+# Special
+- name: "breaking"
+  color: "D93F0B"
+  description: "Breaking change"
+  
+- name: "ignore-for-release"
+  color: "FFFFFF"
+  description: "Exclude from release notes"
+
+# Workflow
+- name: "wip"
+  color: "FEF2C0"
+  description: "Work in progress"
+  
+- name: "duplicate"
+  color: "CFD3D7"
+  description: "This issue or PR already exists"
+  
+- name: "invalid"
+  color: "E4E669"
+  description: "This doesn't seem right"
+  
+- name: "wontfix"
+  color: "FFFFFF"
+  description: "This will not be worked on"
+

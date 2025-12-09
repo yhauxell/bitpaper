@@ -5,24 +5,19 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "package.json"
-      - "src/**"
-      - "bin/**"
-      - "yarn.lock"
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      id-token: write
+      contents: write # Required for creating tags
+      id-token: write # Required for npm provenance
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0 # Fetch all history for proper version checking
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -39,30 +34,121 @@ jobs:
       - name: Check if version changed
         id: version-check
         run: |
-          if git diff HEAD^ HEAD -- package.json | grep '"version"'; then
-            echo "Version changed, will publish"
-            echo "changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "Version unchanged, skipping publish"
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+          # Check if this version already exists on npm
+          if npm view bitpaper@$CURRENT_VERSION version 2>/dev/null; then
+            echo "Version $CURRENT_VERSION already published to npm"
             echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Version $CURRENT_VERSION not yet published"
+            echo "changed=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Publish to npm
+      - name: Get previous tag
         if: steps.version-check.outputs.changed == 'true'
-        run: npm publish
-        
+        id: previous-tag
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+          echo "Previous tag: $PREVIOUS_TAG"
 
-      - name: Get package version
+      - name: Generate Changelog
         if: steps.version-check.outputs.changed == 'true'
-        id: package-version
-        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v4
+        with:
+          fromTag: ${{ steps.previous-tag.outputs.tag }}
+          toTag: HEAD
+          configuration: |
+            {
+              "categories": [
+                {
+                  "title": "## 🚀 Features",
+                  "labels": ["feature", "feat", "enhancement"]
+                },
+                {
+                  "title": "## 🐛 Bug Fixes",
+                  "labels": ["fix", "bug", "bugfix"]
+                },
+                {
+                  "title": "## 📚 Documentation",
+                  "labels": ["docs", "documentation"]
+                },
+                {
+                  "title": "## 🧰 Maintenance",
+                  "labels": ["chore", "refactor", "style", "test"]
+                }
+              ],
+              "ignore_labels": [
+                "ignore"
+              ],
+              "sort": "ASC",
+              "template": "#{{CHANGELOG}}\n\n**Full Changelog**: #{{RELEASE_DIFF}}",
+              "pr_template": "- #{{TITLE}} by @#{{AUTHOR}} in ##{{NUMBER}}",
+              "empty_template": "- No changes",
+              "label_extractor": [
+                {
+                  "pattern": "^(feat|feature)(\\(.+\\))?:",
+                  "target": "feature"
+                },
+                {
+                  "pattern": "^(fix|bugfix)(\\(.+\\))?:",
+                  "target": "fix"
+                },
+                {
+                  "pattern": "^docs(\\(.+\\))?:",
+                  "target": "docs"
+                },
+                {
+                  "pattern": "^(chore|refactor|style|test)(\\(.+\\))?:",
+                  "target": "chore"
+                }
+              ]
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Git tag
         if: steps.version-check.outputs.changed == 'true'
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git tag -a "v${{ steps.package-version.outputs.version }}" -m "Release v${{ steps.package-version.outputs.version }}"
-          git push origin "v${{ steps.package-version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${{ steps.version-check.outputs.current_version }}" -m "Release v${{ steps.version-check.outputs.current_version }}"
+          git push origin "v${{ steps.version-check.outputs.current_version }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to npm
+        if: steps.version-check.outputs.changed == 'true'
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release with auto-generated notes
+        if: steps.version-check.outputs.changed == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "v${{ steps.version-check.outputs.current_version }}"
+          name: "🎉 Release v${{ steps.version-check.outputs.current_version }}"
+          body: |
+            ## What's Changed
+            
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ---
+            
+            ### 📦 Installation
+            
+            ```bash
+            npm install -g bitpaper@${{ steps.version-check.outputs.current_version }}
+            ```
+            
+            ### 📝 NPM Package
+            View on npm: https://www.npmjs.com/package/bitpaper/v/${{ steps.version-check.outputs.current_version }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

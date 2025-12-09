@@ -8,8 +8,8 @@ Use this checklist to ensure everything is configured correctly for automated re
   - Go to [npmjs.com](https://www.npmjs.com/) → Access Tokens
   - Click "Generate New Token" → Select **"Automation"** (not Publish!)
   - Copy the token (starts with `npm_...`)
-  
 - [ ] **Add Token to GitHub Secrets**
+
   - Go to https://github.com/yhauxell/bitpaper/settings/secrets/actions
   - Click "New repository secret" or update existing `NPM_TOKEN`
   - Name: `NPM_TOKEN`
@@ -33,11 +33,13 @@ Use this checklist to ensure everything is configured correctly for automated re
 ## 📝 Commit Changes
 
 - [ ] **Stage all new files**
+
   ```bash
   git add .github/ CHANGELOG.md package.json
   ```
 
 - [ ] **Commit with conventional format**
+
   ```bash
   git commit -m "chore: add automated release workflow and changelog generation"
   ```
@@ -50,15 +52,17 @@ Use this checklist to ensure everything is configured correctly for automated re
 ## 🧪 Test the Workflow
 
 - [ ] **Watch the workflow run**
+
   - Go to https://github.com/yhauxell/bitpaper/actions
   - Click on the latest "Build and Publish" workflow
   - Verify it completes (even if it skips publishing)
 
 - [ ] **Test a release** (after workflow passes)
+
   ```bash
   # Bump version
   npm version patch -m "chore: bump version to %s"
-  
+
   # Push (triggers release)
   git push origin main
   git push --tags
@@ -73,16 +77,19 @@ Use this checklist to ensure everything is configured correctly for automated re
 ## 🔍 Verify Components
 
 - [ ] **Workflow Files Exist**
+
   - [ ] `.github/workflows/publish.yml`
   - [ ] `.github/workflows/sync-labels.yml`
   - [ ] `.github/workflows/ci.yml` (existing)
 
 - [ ] **Configuration Files Exist**
+
   - [ ] `.github/release.yml`
   - [ ] `.github/labels.yml`
   - [ ] `CHANGELOG.md`
 
 - [ ] **Documentation Exists**
+
   - [ ] `.github/RELEASE_PROCESS.md`
   - [ ] `.github/PULL_REQUEST_TEMPLATE.md`
   - [ ] `.github/README.md`
@@ -127,28 +134,38 @@ git push origin main
 ## ⚠️ Common Issues
 
 ### Issue: "Authentication failed" on npm publish
-**Solution:** 
+
+**Solution:**
+
 - Verify you created an **Automation** token (not Publish)
 - Check secret name is exactly `NPM_TOKEN`
 - Ensure token is active on npmjs.com
 
 ### Issue: "Version already published"
+
 **Solution:**
+
 - The version in package.json already exists on npm
 - Bump version: `npm version patch`
 
 ### Issue: "Permission denied" creating tags
+
 **Solution:**
+
 - Already fixed! Workflow has `contents: write` permission
 
 ### Issue: Changelog is empty
+
 **Solution:**
+
 - Ensure you have commits since last release
 - Use conventional commit format (`feat:`, `fix:`, etc.)
 - Apply PR labels when merging
 
 ### Issue: Labels not syncing
+
 **Solution:**
+
 - Verify `.github/labels.yml` exists
 - Manually trigger "Sync Labels" workflow
 - Check workflow logs for errors
@@ -194,4 +211,3 @@ If you encounter issues:
 ---
 
 **Ready to deploy?** Check off each item above, then do a test release! 🚀
-

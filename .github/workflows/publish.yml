@@ -134,17 +134,17 @@ jobs:
           name: "🎉 Release v${{ steps.version-check.outputs.current_version }}"
           body: |
             ## What's Changed
-            
+
             ${{ steps.changelog.outputs.changelog }}
-            
+
             ---
-            
+
             ### 📦 Installation
-            
+
             ```bash
             npm install -g bitpaper@${{ steps.version-check.outputs.current_version }}
             ```
-            
+
             ### 📝 NPM Package
             View on npm: https://www.npmjs.com/package/bitpaper/v/${{ steps.version-check.outputs.current_version }}
           generate_release_notes: true

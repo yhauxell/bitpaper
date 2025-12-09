@@ -20,7 +20,7 @@ Your BitPaper project now has professional-grade automated publishing and change
 ### Documentation
 - ✅ `.github/RELEASE_PROCESS.md` - **NEW** comprehensive release guide
 - ✅ `.github/PULL_REQUEST_TEMPLATE.md` - **NEW** PR template
-- ✅ `.github/README.md` - **NEW** automation overview
+- ✅ `.github/WORKFLOWS.md` - **NEW** automation overview
 - ✅ `CONTRIBUTING.md` - Existing (already has commit conventions ✓)
 
 ## 🚀 Key Improvements
@@ -212,7 +212,7 @@ graph LR
 All documentation is ready:
 - **[RELEASE_PROCESS.md](.github/RELEASE_PROCESS.md)** - Detailed release guide
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines  
-- **[.github/README.md](.github/README.md)** - Automation overview
+- **[WORKFLOWS.md](.github/WORKFLOWS.md)** - Automation overview
 - **[CHANGELOG.md](CHANGELOG.md)** - Project changelog
 
 ## ✨ Example Release

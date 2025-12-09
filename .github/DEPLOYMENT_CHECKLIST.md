@@ -92,7 +92,7 @@ Use this checklist to ensure everything is configured correctly for automated re
 
   - [ ] `.github/RELEASE_PROCESS.md`
   - [ ] `.github/PULL_REQUEST_TEMPLATE.md`
-  - [ ] `.github/README.md`
+  - [ ] `.github/WORKFLOWS.md`
   - [ ] `.github/SETUP_SUMMARY.md`
 
 - [ ] **Package.json Updated**

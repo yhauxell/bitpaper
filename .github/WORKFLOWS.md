@@ -1,6 +1,6 @@
-# 🤖 GitHub Automation
+# 🤖 GitHub Workflows & Automation
 
-This folder contains GitHub-specific configuration for automated workflows, releases, and project management.
+This document describes the GitHub Actions workflows and automation configured for this project.
 
 ## 📁 Structure
 
@@ -14,7 +14,9 @@ This folder contains GitHub-specific configuration for automated workflows, rele
 ├── release.yml             # Release notes configuration
 ├── PULL_REQUEST_TEMPLATE.md
 ├── RELEASE_PROCESS.md      # Detailed release guide
-└── README.md               # This file
+├── WORKFLOWS.md            # This file
+├── SETUP_SUMMARY.md        # Setup overview
+└── DEPLOYMENT_CHECKLIST.md # Deployment checklist
 ```
 
 ## 🚀 Workflows
